@@ -5,7 +5,8 @@
 #include "locationmap.h"
 #include <unordered_map>
 #include <boost/graph/adjacency_list.hpp>
-
+#include <boost/qvm/vec.hpp>
+typedef boost::qvm::vec<float,3> vec3;
 template<
     class T,
     class Container = std::vector<T>,
@@ -25,6 +26,31 @@ public:
         auto last = this->c.cend();
         while (first!=last) {
             if (*first==val) return true;
+            ++first;
+        }
+        return false;
+    }
+};
+
+template<
+    class T,
+    class Container = std::vector<T>,
+    class Compare = std::less<typename Container::value_type>
+> class MyQueue1 : public std::priority_queue<T, Container, Compare>
+{
+public:
+    typedef typename
+        std::priority_queue<
+        T,
+        Container,
+        Compare>::container_type::const_iterator const_iterator;
+
+    bool contains(const T&val) const
+    {
+        auto first = this->c.cbegin();
+        auto last = this->c.cend();
+        while (first!=last) {
+            if (first->second==val.second) return true;
             ++first;
         }
         return false;
@@ -78,6 +104,74 @@ void init_g(int width, int height, my_graph& g)
             weight_map[add_edge(i * width + j, i * width - (width - 1) + j, g).first]=1.1;
 }
 
+int min_f(const priority_queue<int>& pq)
+{
+    
+}
+
+float heuristic(const vec3& a, const vec3& b)
+{
+    float dx=a.a[0]-b.a[0];
+    float dy=a.a[1]-b.a[1];
+    return sqrt(dx*dx+dy*dy);
+}
+
+list<int> astar(my_graph& g, int start, int goal, const DMQuadrangle& d)
+{
+    try
+    {
+        Weight_Map weight_map = get(edge_weight, g);
+        std::unordered_map<unsigned int, float> costs;
+        std::unordered_map<unsigned int, float> f;
+        std::unordered_map<unsigned int, float> pred;
+        MyQueue1 <pair<float,int>,vector<pair<float,int>>,greater<pair<float,int>>> o;
+        MyQueue <int> c;        
+        costs[start]=0;
+        o.push({costs[start]+heuristic(d.matrix[start],d.matrix[goal]),start});
+        while(!o.empty())
+        {
+            int x=o.top().second;
+            o.pop();
+            c.push(x);
+            if(x==goal)
+            {
+                
+                list<int> path;
+                list<float> cost;
+                while(pred[x])
+                {                    
+                    path.push_front(x);
+                    x=pred[x];
+                }
+                path.push_front(start);
+                return path;
+            }
+            else
+            {
+                for(outEdgePair e=out_edges(x,g); e.first != e.second; ++e.first)
+                {
+                    int xsuc=target(*e.first,g);
+                    if(!c.contains(xsuc))
+                    {
+                        if(!o.contains({0,xsuc})||costs[x]>costs[x]+weight_map[*e.first])
+                        {                    
+                            costs[xsuc]=costs[x]+weight_map[*e.first];
+                            pred[xsuc]=x;
+                            //o1[costs[xsuc]+heuristic(d.matrix[x],d.matrix[xsuc])]=x;
+                            if(!o.contains({0,xsuc}))
+                                o.push({costs[xsuc]+heuristic(d.matrix[x],d.matrix[xsuc]),xsuc});                            
+                        }
+                    }
+                }
+            }
+        }
+    }
+    catch(const std::exception& e)
+    {
+
+    }
+}
+
 list<int> dijkstra(my_graph& g, int start, int goal)
 {
     try
@@ -88,9 +182,11 @@ list<int> dijkstra(my_graph& g, int start, int goal)
         MyQueue <int> o;
         MyQueue <int> c;
         o.push(start);
+        costs[start]=0;
         while(!o.empty())
         {
             int x=o.top();
+
             o.pop();
             c.push(x);
             if(x==goal)
@@ -133,10 +229,11 @@ list<int> dijkstra(my_graph& g, int start, int goal)
 
 int main()
 {
-    my_graph g(12);
-    DMQuadrangle dis(5,5,22,1);
+    my_graph g(110);
+    DMQuadrangle dis(11,10,105,1);
     dis.init();
-    init_g(3,4,g);
-    list<int> path=dijkstra(g,11,0);
+    init_g(11,10,g);
+    list<int> path=dijkstra(g, 105, 0);
+    list<int> path1=astar(g, 105, 0, dis);
     return 0;
 }
