@@ -3,6 +3,7 @@
 #include <set>
 #include <algorithm>
 #include "locationmap.h"
+#include <unordered_map>
 #include <boost/graph/adjacency_list.hpp>
 
 template<
@@ -77,55 +78,65 @@ void init_g(int width, int height, my_graph& g)
             weight_map[add_edge(i * width + j, i * width - (width - 1) + j, g).first]=1.1;
 }
 
-int dijkstra(my_graph& g, int start, int goal)
+list<int> dijkstra(my_graph& g, int start, int goal)
 {
-    Weight_Map weight_map = get(edge_weight, g);
-    float g1=0;
-
-    MyQueue <int> o;
-    MyQueue <int> c;
-    queue<int> map;
-    o.push(start);
-    while(!o.empty())
+    try
     {
-        int x=o.top();
-        o.pop();
-        c.push(x);
-        if(x==goal)
+        Weight_Map weight_map = get(edge_weight, g);
+        std::unordered_map<unsigned int, float> costs;
+        std::unordered_map<unsigned int, float> pred;
+        MyQueue <int> o;
+        MyQueue <int> c;
+        o.push(start);
+        while(!o.empty())
         {
-                cout<<endl<<g1;
-
-            return x;
-            }
-        else
-        {
-            for(outEdgePair e=out_edges(x,g); e.first != e.second; ++e.first)
+            int x=o.top();
+            o.pop();
+            c.push(x);
+            if(x==goal)
             {
                 
-                cout<<*e.first<<'\t'<<weight_map[*e.first]<<endl;
-                int xsuc=target(*e.first,g);
-                if(!c.contains(xsuc))
+                list<int> path;
+                list<float> cost;
+                while(pred[x])
+                {                    
+                    path.push_front(x);
+                    x=pred[x];
+                }
+                path.push_front(start);
+                return path;
+            }
+            else
+            {
+                for(outEdgePair e=out_edges(x,g); e.first != e.second; ++e.first)
                 {
-                    float g2=g1+weight_map[*e.first];
-                    if(!o.contains(xsuc)||g1>g2)
+                    int xsuc=target(*e.first,g);
+                    if(!c.contains(xsuc))
                     {
-                        g1=g2;
-                        //cout<<x<<',';
-                        if(!o.contains(xsuc))
-                            o.push(xsuc);                            
+                        if(!o.contains(xsuc)||costs[x]>costs[x]+weight_map[*e.first])
+                        {                    
+                            costs[xsuc]=costs[x]+weight_map[*e.first];
+                            pred[xsuc]=x;
+                            if(!o.contains(xsuc))
+                                o.push(xsuc);                            
+                        }
                     }
                 }
             }
         }
     }
+    catch(const std::exception& e)
+    {
+
+    }
 }
 
 int main()
 {
-    my_graph g(4);
+    my_graph g(12);
     DMQuadrangle dis(5,5,22,1);
     dis.init();
-    init_g(2,2,g);
-    dijkstra(g,3,0);
+    init_g(3,4,g);
+    list<int> path=dijkstra(g,11,0);
     return 0;
 }
