@@ -112,8 +112,9 @@ int min_f(const priority_queue<int>& pq)
 float heuristic(const vec3& a, const vec3& b)
 {
     float dx=a.a[0]-b.a[0];
-    float dy=a.a[1]-b.a[1];
-    return sqrt(dx*dx+dy*dy);
+    float dy=a.a[2]-b.a[2];
+    float h=sqrt(dx*dx+dy*dy);
+    return h;
 }
 
 list<int> astar(my_graph& g, int start, int goal, const DMQuadrangle& d)
@@ -157,9 +158,9 @@ list<int> astar(my_graph& g, int start, int goal, const DMQuadrangle& d)
                         {                    
                             costs[xsuc]=costs[x]+weight_map[*e.first];
                             pred[xsuc]=x;
-                            //o1[costs[xsuc]+heuristic(d.matrix[x],d.matrix[xsuc])]=x;
+                            //o1[costs[xsuc]+heuristic(d.matrix[x],d.matrix[goal])]=x;
                             if(!o.contains({0,xsuc}))
-                                o.push({costs[xsuc]+heuristic(d.matrix[x],d.matrix[xsuc]),xsuc});                            
+                                o.push({costs[xsuc]+heuristic(d.matrix[xsuc],d.matrix[goal]),xsuc});                            
                         }
                     }
                 }
