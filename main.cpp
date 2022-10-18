@@ -228,6 +228,36 @@ list<int> dijkstra(my_graph& g, int start, int goal)
     }
 }
 
+vec3 expand(float theta, float beta, float d, vec3 rearWheelPos)
+{
+    vec3 newRearWheelPos;
+
+    if (abs(beta) < 0.00001f)
+    {
+        newRearWheelPos.a[0] = newRearWheelPos.a[0] + d * sin(theta);
+        newRearWheelPos.a[2] = newRearWheelPos.a[2] + d * cos(theta);
+    }
+    //Turn
+    else
+    {
+        //Turning radius 
+        float R = d / beta;
+
+        float cx = rearWheelPos.a[0] + cos(theta) * R;
+        float cz = rearWheelPos.a[2] - sin(theta) * R;
+
+        newRearWheelPos.a[0] = cx - cos(theta + beta) * R;
+        newRearWheelPos.a[2] = cz + sin(theta + beta) * R;
+    }
+
+    return newRearWheelPos;
+}
+
+void hybrid_astar(my_graph& g, int start, int goal, const DMQuadrangle& d)
+{
+
+}
+
 int main()
 {
     my_graph g(110);
