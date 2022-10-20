@@ -25,6 +25,7 @@ class DistanceMatrix:public IDistanceMatrix
 public:
     /// Вектор точек будущей матрицы
     vector<vec3> matrix;
+    vector<bool> vacant;
     void init()override;
      ~DistanceMatrix()override;
 };

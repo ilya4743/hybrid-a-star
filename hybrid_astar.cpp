@@ -2,9 +2,16 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <unordered_map>
 #include <queue>
+#include <helper.h>
+#include "hybrid_astar.h"
 
 using namespace boost;
 using namespace std;
+
+// R = 6, 6.75 DEG
+const float dy[] = { 0,        -0.0415893,  0.0415893};
+const float dx[] = { 0.7068582,   0.705224,   0.705224};
+const float dt[] = { 0,         0.1178097,   -0.1178097};
 
 /// Вес ребра
 typedef boost::property<boost::edge_weight_t, float> weight;
@@ -78,23 +85,89 @@ public:
     }
 };
 
-list<int> hybrid_atar(my_graph& g, int start, int goal, const DMQuadrangle& d)
+vec3 expand11(float theta, float beta, float d, vec3 rearWheelPos)
+{
+    vec3 newRearWheelPos;
+
+    if (abs(beta) < 0.00001f)
+    {
+        newRearWheelPos.a[0] = newRearWheelPos.a[0] + d * sin(theta);
+        newRearWheelPos.a[2] = newRearWheelPos.a[2] + d * cos(theta);
+    }
+    //Turn
+    else
+    {
+        //Turning radius 
+        float R = d / beta;
+
+        float cx = rearWheelPos.a[0] + cos(theta) * R;
+        float cz = rearWheelPos.a[2] - sin(theta) * R;
+
+        newRearWheelPos.a[0] = cx - cos(theta + beta) * R;
+        newRearWheelPos.a[2] = cz + sin(theta + beta) * R;
+    }
+
+    return newRearWheelPos;
+}
+
+vec3 createSuccessor(const vec3 e, int i) 
+{
+  float xSucc;
+  float ySucc;
+  float tSucc;
+
+  // calculate successor positions forward
+  //if (i < 3) {
+    xSucc = e.a[0] + dx[i] * cos(e.a[2]) - dy[i] * sin(e.a[2]);
+    ySucc = e.a[1] + dx[i] * sin(e.a[2]) + dy[i] * cos(e.a[2]);
+    tSucc = Helper::normalizeHeadingRad(e.a[3] + dt[i]);
+  //}
+  // backwards
+  //else {
+  //  xSucc = e.a[0] - dx[i - 3] * cos(e.a[2]) - dy[i - 3] * sin(e.a[2]);
+  //  ySucc = e.a[1] - dx[i - 3] * sin(e.a[2]) + dy[i - 3] * cos(e.a[2]);
+  //  tSucc = Helper::normalizeHeadingRad(e.a[2] - dt[i - 3]);
+  //}
+vec3 v={xSucc, ySucc, tSucc};
+  return v;
+}
+
+float heuristic1(const vec3& a, const vec3& b)
+{
+    float dx=a.a[0]-b.a[0];
+    float dy=a.a[1]-b.a[1];
+    float h=sqrt(dx*dx+dy*dy);
+    return h;
+}
+
+vector<vec3> succ;
+vector<vec3> mat;
+vector<vec3> path;
+list<int> hybrid_atar(my_graph& g, int start, int goal)
 {
     try
     {
+        start=0;
+        goal=1;
         Weight_Map weight_map = get(edge_weight, g);
         std::unordered_map<unsigned int, float> costs;
         std::unordered_map<unsigned int, float> f;
         std::unordered_map<unsigned int, float> pred;
         MyQueue1 <pair<float,int>,vector<pair<float,int>>,greater<pair<float,int>>> o;
-        MyQueue <int> c;        
+        MyQueue <int> c;   
+        vec3 vvv{0,0,0};
+        mat.push_back(vvv);
+        vec3 vvv1{10,10,0};
+        mat.push_back(vvv1);
+
         costs[start]=0;
-        //o.push({costs[start]+heuristic(d.matrix[start],d.matrix[goal]),start});
+        o.push({costs[start]+heuristic1(mat[start],mat[goal]),start});
         while(!o.empty())
         {
             int x=o.top().second;
             o.pop();
             c.push(x);
+            path.push_back(mat[x]);
             if(x==goal)
             {
                 
@@ -110,7 +183,29 @@ list<int> hybrid_atar(my_graph& g, int start, int goal, const DMQuadrangle& d)
             }
             else
             {
-                for(outEdgePair e=out_edges(x,g); e.first != e.second; ++e.first)
+                for(int i=0; i<3; i++)
+                {
+                    succ.push_back(createSuccessor(mat[x],i));
+                    add_vertex(g);
+                    mat.push_back(succ[succ.size()-1]);
+                    int xsuc=num_vertices(g)-1;
+
+                    //int xsuc=target(*e.first,g);
+                    if(!c.contains(xsuc))
+                    {
+                        if(!o.contains({0,xsuc})||costs[x]>costs[x]+1)
+                        {                    
+                            costs[xsuc]=costs[x]+1;
+                            pred[xsuc]=x;
+                            //o1[costs[xsuc]+heuristic(d.matrix[x],d.matrix[goal])]=x;
+                            if(!o.contains({0,xsuc}))
+                                o.push({costs[xsuc]+heuristic1(succ[succ.size()-1],mat[goal]),xsuc});                            
+                        }
+                    }
+                }
+                for(int i=0; i<3; i++);
+
+                /*for(outEdgePair e=out_edges(x,g); e.first != e.second; ++e.first)
                 {
                     int xsuc=target(*e.first,g);
                     if(!c.contains(xsuc))
@@ -124,7 +219,7 @@ list<int> hybrid_atar(my_graph& g, int start, int goal, const DMQuadrangle& d)
                                 //o.push({costs[xsuc]+heuristic(d.matrix[xsuc],d.matrix[goal]),xsuc});                            
                         }
                     }
-                }
+                }*/
             }
         }
     }

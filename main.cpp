@@ -3,9 +3,11 @@
 #include <set>
 #include <algorithm>
 #include "locationmap.h"
+#include "hybrid_astar.h"
 #include <unordered_map>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/qvm/vec.hpp>
+
 typedef boost::qvm::vec<float,3> vec3;
 template<
     class T,
@@ -64,6 +66,8 @@ using namespace boost;
 typedef boost::property<boost::edge_weight_t, float> weight;
 /// Граф (список смежности)
 typedef adjacency_list<vecS, vecS, undirectedS, boost::no_property, weight> my_graph;
+typedef adjacency_list<vecS, listS, undirectedS, boost::no_property, weight> my_graph1;
+
 /// Итератор дуг
 typedef boost::graph_traits<my_graph>::edge_iterator edge_iterator;
 typedef boost::graph_traits<my_graph>::out_edge_iterator out_edge_iterator;
@@ -82,7 +86,7 @@ typedef typename graph_traits<my_graph>::vertex_descriptor vertex_descriptor;
 /// Дескриптор рёбер
 typedef typename graph_traits<my_graph>::edge_descriptor  edge_descriptor;
 
-
+/*
 void init_g(int width, int height, my_graph& g)
 {
     Weight_Map weight_map = get(edge_weight, g);
@@ -226,45 +230,16 @@ list<int> dijkstra(my_graph& g, int start, int goal)
     {
 
     }
-}
-
-vec3 expand(float theta, float beta, float d, vec3 rearWheelPos)
-{
-    vec3 newRearWheelPos;
-
-    if (abs(beta) < 0.00001f)
-    {
-        newRearWheelPos.a[0] = newRearWheelPos.a[0] + d * sin(theta);
-        newRearWheelPos.a[2] = newRearWheelPos.a[2] + d * cos(theta);
-    }
-    //Turn
-    else
-    {
-        //Turning radius 
-        float R = d / beta;
-
-        float cx = rearWheelPos.a[0] + cos(theta) * R;
-        float cz = rearWheelPos.a[2] - sin(theta) * R;
-
-        newRearWheelPos.a[0] = cx - cos(theta + beta) * R;
-        newRearWheelPos.a[2] = cz + sin(theta + beta) * R;
-    }
-
-    return newRearWheelPos;
-}
-
-void hybrid_astar(my_graph& g, int start, int goal, const DMQuadrangle& d)
-{
-
-}
+}*/
 
 int main()
 {
-    my_graph g(110);
-    DMQuadrangle dis(11,10,105,1);
-    dis.init();
-    init_g(11,10,g);
-    list<int> path=dijkstra(g, 105, 0);
-    list<int> path1=astar(g, 105, 0, dis);
+    my_graph g(2);
+    //my_graph1 g1(1);
+    //DMQuadrangle dis(11,10,105,1);
+    //dis.init();
+    //init_g(11,10,g);
+    //list<int> path=dijkstra(g, 105, 0);
+    list<int> path1=hybrid_atar(g, 0, 1);
     return 0;
 }

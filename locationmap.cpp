@@ -30,7 +30,7 @@ void DMQuadrangle::init()
        for (int i = center / width; i >= 0; i--)
        {
            for (int j = center % width; j >= 0; j--)
-               matrix[i * width + j] = { x-=step,0,-z };
+               matrix[i * width + j] = { x-=step,-z,0 };
            x = step;
            z-=step;
        }
@@ -39,14 +39,14 @@ void DMQuadrangle::init()
        for (int i = center / width; i < height; i++)
        {
            for (int j = center % width; j < width; j++)
-               matrix[i * width + j] = { x+=step,0,-z};
+               matrix[i * width + j] = { x+=step,-z,0};
            x = -step;
            z+=step;
        }z = 0;
        for (int i = center/ width; i >= 0; i--)
        {
            for (int j = center % width; j < width; j++)
-               matrix[i * width + j] = { x+=step,0,z };
+               matrix[i * width + j] = { x+=step,z,0 };
            x = -step;
            z+=step;
        }
@@ -55,7 +55,7 @@ void DMQuadrangle::init()
        for (int i = center/ width; i <height; i++)
        {
            for (int j = center%width; j >=0; j--)
-               matrix[i * width + j] = { x-=step,0,z};
+               matrix[i * width + j] = { x-=step,z,0};
            x = step;
            z-=step;
        }

@@ -1,0 +1,1 @@
+/usr/bin/g++ -g CMakeFiles/test.dir/hybrid_astar.cpp.o CMakeFiles/test.dir/locationmap.cpp.o CMakeFiles/test.dir/main.cpp.o CMakeFiles/test.dir/node.cpp.o -o test 
