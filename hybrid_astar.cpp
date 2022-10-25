@@ -228,3 +228,36 @@ list<int> hybrid_atar(my_graph& g, int start, int goal)
 
     }
 }
+
+vector<State> HybridAStar::Expand(State &state) {
+  int g = state.g;
+  double x = state.x;
+  double y = state.y;
+  double theta = state.theta;
+    
+  int next_g = g+1;
+  vector<State> next_states;
+
+  for(double delta_i = -MAX_STEERING; delta_i <= MAX_STEERING; delta_i+=5) {
+    // kinematic model
+    double delta = DEG2RADIAN * delta_i;
+    double omega = SPEED / VEHICLE_LEGTH * (delta) * DT;
+    double next_theta = theta + omega;
+    if(next_theta < 0) {
+      next_theta += 2*M_PI;
+    }
+    double next_x = x + SPEED * cos(theta)* DT;
+    double next_y = y + SPEED * sin(theta)* DT;
+    State next_state;
+    next_state.g = next_g;
+    next_state.x = next_x;
+    next_state.y = next_y;
+
+    next_state.theta = next_theta;
+    next_state.h = Heuristic(next_x, next_y, next_state.theta, goal_pos_[0], goal_pos_[1], goal_pos_[2]);
+    next_state.f = next_state.g + next_state.h;
+    next_states.push_back(next_state);
+  }
+
+  return next_states;
+}

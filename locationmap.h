@@ -2,9 +2,11 @@
 #define LOCATIONMAP_H
 #include <iostream>
 #include <vector>
+#include <cmath>
 #include <boost/qvm/vec.hpp>
 
 typedef boost::qvm::vec<float,3> vec3;
+typedef boost::qvm::vec<float,2> vec2;
 
 using namespace std;
 
@@ -25,7 +27,6 @@ class DistanceMatrix:public IDistanceMatrix
 public:
     /// Вектор точек будущей матрицы
     vector<vec3> matrix;
-    vector<bool> vacant;
     void init()override;
      ~DistanceMatrix()override;
 };
@@ -87,4 +88,26 @@ public:
     void print(const DistanceMatrix& distance);
 };
 
+class OccurancyMatrix
+{
+    public:
+    /// Ширина матрицы
+    int width;
+    /// Высота матрицы
+    int height;
+
+    vector<int> matrix;
+
+    /// Шаг элементов матрицы расстояний
+    float step;
+    OccurancyMatrix();
+    OccurancyMatrix(int width, int height, float step);
+    OccurancyMatrix(const OccurancyMatrix& matrix);
+    ~OccurancyMatrix();
+    bool is_collision(const vec3& p);
+    bool is_out_of_map(vec3& p);
+    bool is_out_of_map(vec2& p);
+    bool is_grid_collision(vec2& p);
+
+}
 #endif // LOCATIONMAP_H
