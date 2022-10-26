@@ -1,38 +1,51 @@
-#include <list>
 #include "state.h"
 #include "defs.h"
 #include "locationmap.h"
-#include <boost/graph/adjacency_list.hpp>
-using namespace boost;
+#include <queue>
+#include <unordered_map>
+#include <boost/qvm/vec.hpp>
 
-/// Вес ребра
-typedef boost::property<boost::edge_weight_t, float> weight;
-/// Граф (список смежности)
-typedef adjacency_list<vecS, vecS, undirectedS, boost::no_property, weight> my_graph;
-/// Итератор дуг
-typedef boost::graph_traits<my_graph>::edge_iterator edge_iterator;
-typedef boost::graph_traits<my_graph>::out_edge_iterator out_edge_iterator;
-/// Итератор вершин
-typedef boost::graph_traits<my_graph>::vertex_iterator vertex_iterator;
-/// Карта весов рёбер
-typedef boost::property_map<my_graph, boost::edge_weight_t>::type Weight_Map;
-/// Пара итераторов для ребра
-typedef std::pair<edge_iterator, edge_iterator> edgePair;
-typedef std::pair<out_edge_iterator, out_edge_iterator> outEdgePair;
+typedef boost::qvm::vec<float,3> vec3;
+typedef boost::qvm::vec<float,2> vec2;
 
-/// Пара итераторов для вершины
-typedef std::pair<vertex_iterator, vertex_iterator> vertexPair;
-/// Дескриптор вершин
-typedef typename graph_traits<my_graph>::vertex_descriptor vertex_descriptor;
-/// Дескриптор рёбер
-typedef typename graph_traits<my_graph>::edge_descriptor  edge_descriptor;
+template<
+    class T,
+    class Container = std::vector<T>,
+    class Compare = std::less<typename Container::value_type>
+> class MyQueue : public std::priority_queue<T, Container, Compare>
+{
+public:
+    typedef typename
+        std::priority_queue<
+        T,
+        Container,
+        Compare>::container_type::const_iterator const_iterator;
 
-std::list<int> hybrid_atar(my_graph& g, int start, int goal);
+    bool contains(const T&val) const
+    {
+        auto first = this->c.cbegin();
+        auto last = this->c.cend();
+        while (first!=last) {
+            if (first->second==val.second) return true;
+            ++first;
+        }
+        return false;
+    }
+};
 
 class HybridAStar
 {
+    private:
+    float Heuristic(const vec3& p1, const vec3& p2);
+    int Theta2Stack(float theta);
     vector<State> Expand(const State &state, const vec3& goal);
-    void Search(const vec3& start, const vec3& goal, const OccurancyMatrix& matrix) 
-    float Heuristic(const vec2& p1, const vec2& p2);
-    int HybridAStar::Theta2Stack(float theta);
+    bool is_collision(const vec3& p,  const OccurancyMatrix& mat);
+    int Idx(double float_num) {
+    // Returns the index into the grid for continuous position. So if x is 3.621, 
+    //   then this would return 3 to indicate that 3.621 corresponds to array 
+    //   index 3.
+    return int(floor(float_num));
+    }
+    public:
+    void Search(const vec3& start, const vec3& goal, const OccurancyMatrix& matrix);
 };

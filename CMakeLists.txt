@@ -13,12 +13,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(${PROJECT_NAME}
     hybrid_astar.h
-    hybrid_astar.cpp
     locationmap.h
-    helper.h
+    ##helper.h
     state.h
     locationmap.cpp
     main.cpp
-    node.cpp
     state.cpp
+    hybrid_astar.cpp
 )

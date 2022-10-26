@@ -5,7 +5,7 @@ class State
 {
     public:
     State();
-    State(int g, float h, float f, vec3 pos);
+    State(int g, float h, float f, const vec3& pos);
     State(const State& state);
     ~State();
 	int g; // iteration

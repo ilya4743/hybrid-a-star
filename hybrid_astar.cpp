@@ -1,235 +1,49 @@
-#include "locationmap.h"
-#include <boost/graph/adjacency_list.hpp>
-#include <unordered_map>
-#include <queue>
-#include <helper.h>
 #include "hybrid_astar.h"
 
-using namespace boost;
 using namespace std;
 
-// R = 6, 6.75 DEG
-const float dy[] = { 0,        -0.0415893,  0.0415893};
-const float dx[] = { 0.7068582,   0.705224,   0.705224};
-const float dt[] = { 0,         0.1178097,   -0.1178097};
-
-/// Вес ребра
-typedef boost::property<boost::edge_weight_t, float> weight;
-/// Граф (список смежности)
-typedef adjacency_list<vecS, vecS, undirectedS, boost::no_property, weight> my_graph;
-/// Итератор дуг
-typedef boost::graph_traits<my_graph>::edge_iterator edge_iterator;
-typedef boost::graph_traits<my_graph>::out_edge_iterator out_edge_iterator;
-/// Итератор вершин
-typedef boost::graph_traits<my_graph>::vertex_iterator vertex_iterator;
-/// Карта весов рёбер
-typedef boost::property_map<my_graph, boost::edge_weight_t>::type Weight_Map;
-/// Пара итераторов для ребра
-typedef std::pair<edge_iterator, edge_iterator> edgePair;
-typedef std::pair<out_edge_iterator, out_edge_iterator> outEdgePair;
-
-/// Пара итераторов для вершины
-typedef std::pair<vertex_iterator, vertex_iterator> vertexPair;
-/// Дескриптор вершин
-typedef typename graph_traits<my_graph>::vertex_descriptor vertex_descriptor;
-/// Дескриптор рёбер
-typedef typename graph_traits<my_graph>::edge_descriptor  edge_descriptor;
-
-template<
-    class T,
-    class Container = std::vector<T>,
-    class Compare = std::less<typename Container::value_type>
-> class MyQueue : public std::priority_queue<T, Container, Compare>
+bool HybridAStar::is_collision(const vec3& p, const OccurancyMatrix& mat)
 {
-public:
-    typedef typename
-        std::priority_queue<
-        T,
-        Container,
-        Compare>::container_type::const_iterator const_iterator;
+  float margin = 0.3;
+  bool ret = false; 
+  float rear_center_x = p.a[0];
+  float rear_center_y = p.a[1];
+  float front_center_x = rear_center_x + (VEHICLE_LEGTH+margin)*cos(p.a[2]);
+  float front_center_y = rear_center_y + (VEHICLE_LEGTH+margin)*sin(p.a[2]);
+  float left_rear_x = rear_center_x + (VEHICLE_WIDTH+margin)/2*cos(p.a[2] + M_PI/2);
+  float left_rear_y = rear_center_y + (VEHICLE_WIDTH+margin)/2*sin(p.a[2] + M_PI/2);
+  float right_rear_x = rear_center_x + (VEHICLE_WIDTH+margin)/2*cos(M_PI/2 - p.a[2]);
+  float right_rear_y = rear_center_y - (VEHICLE_WIDTH+margin)/2*sin(M_PI/2 - p.a[2]);
 
-    bool contains(const T&val) const
+  float left_front_x = front_center_x + (VEHICLE_WIDTH+margin)/2*cos(p.a[2] + M_PI/2);
+  float left_front_y = front_center_y + (VEHICLE_WIDTH+margin)/2*sin(p.a[2] + M_PI/2);
+  float right_front_x = front_center_x + (VEHICLE_WIDTH+margin)/2*cos(M_PI/2 - p.a[2]);
+  float right_front_y = front_center_y - (VEHICLE_WIDTH+margin)/2*sin(M_PI/2 - p.a[2]);
+  vector<vec2> vertices;
+  vertices.push_back({left_rear_x, left_rear_y});
+  vertices.push_back({right_rear_x, right_rear_y});
+  vertices.push_back({left_front_x, left_front_y});
+  vertices.push_back({right_front_x, right_front_y});
+  for (int i = 0 ; i < vertices.size(); i ++)
+  {
+    bool out_map = mat.is_out_of_map(vertices[i]);
+    if (out_map == true)
     {
-        auto first = this->c.cbegin();
-        auto last = this->c.cend();
-        while (first!=last) {
-            if (*first==val) return true;
-            ++first;
-        }
-        return false;
+      ret = true;
+      break;
     }
-};
-
-template<
-    class T,
-    class Container = std::vector<T>,
-    class Compare = std::less<typename Container::value_type>
-> class MyQueue1 : public std::priority_queue<T, Container, Compare>
-{
-public:
-    typedef typename
-        std::priority_queue<
-        T,
-        Container,
-        Compare>::container_type::const_iterator const_iterator;
-
-    bool contains(const T&val) const
+    bool collision_grid = mat.is_grid_collision(vertices[i]);
+    if (collision_grid == true)
     {
-        auto first = this->c.cbegin();
-        auto last = this->c.cend();
-        while (first!=last) {
-            if (first->second==val.second) return true;
-            ++first;
-        }
-        return false;
+      ret = true;
+      break;
     }
-};
+  }
 
-vec3 expand11(float theta, float beta, float d, vec3 rearWheelPos)
-{
-    vec3 newRearWheelPos;
-
-    if (abs(beta) < 0.00001f)
-    {
-        newRearWheelPos.a[0] = newRearWheelPos.a[0] + d * sin(theta);
-        newRearWheelPos.a[2] = newRearWheelPos.a[2] + d * cos(theta);
-    }
-    //Turn
-    else
-    {
-        //Turning radius 
-        float R = d / beta;
-
-        float cx = rearWheelPos.a[0] + cos(theta) * R;
-        float cz = rearWheelPos.a[2] - sin(theta) * R;
-
-        newRearWheelPos.a[0] = cx - cos(theta + beta) * R;
-        newRearWheelPos.a[2] = cz + sin(theta + beta) * R;
-    }
-
-    return newRearWheelPos;
+  return ret;
 }
 
-vec3 createSuccessor(const vec3 e, int i) 
-{
-  float xSucc;
-  float ySucc;
-  float tSucc;
-
-  // calculate successor positions forward
-  //if (i < 3) {
-    xSucc = e.a[0] + dx[i] * cos(e.a[2]) - dy[i] * sin(e.a[2]);
-    ySucc = e.a[1] + dx[i] * sin(e.a[2]) + dy[i] * cos(e.a[2]);
-    tSucc = Helper::normalizeHeadingRad(e.a[3] + dt[i]);
-  //}
-  // backwards
-  //else {
-  //  xSucc = e.a[0] - dx[i - 3] * cos(e.a[2]) - dy[i - 3] * sin(e.a[2]);
-  //  ySucc = e.a[1] - dx[i - 3] * sin(e.a[2]) + dy[i - 3] * cos(e.a[2]);
-  //  tSucc = Helper::normalizeHeadingRad(e.a[2] - dt[i - 3]);
-  //}
-vec3 v={xSucc, ySucc, tSucc};
-  return v;
-}
-
-float heuristic1(const vec3& a, const vec3& b)
-{
-    float dx=a.a[0]-b.a[0];
-    float dy=a.a[1]-b.a[1];
-    float h=sqrt(dx*dx+dy*dy);
-    return h;
-}
-
-vector<vec3> succ;
-vector<vec3> mat;
-vector<vec3> path;
-list<int> hybrid_atar(my_graph& g, int start, int goal)
-{
-    try
-    {
-        start=0;
-        goal=1;
-        Weight_Map weight_map = get(edge_weight, g);
-        std::unordered_map<unsigned int, float> costs;
-        std::unordered_map<unsigned int, float> f;
-        std::unordered_map<unsigned int, float> pred;
-        MyQueue1 <pair<float,int>,vector<pair<float,int>>,greater<pair<float,int>>> o;
-        MyQueue <int> c;   
-        vec3 vvv{0,0,0};
-        mat.push_back(vvv);
-        vec3 vvv1{10,10,0};
-        mat.push_back(vvv1);
-
-        costs[start]=0;
-        o.push({costs[start]+heuristic1(mat[start],mat[goal]),start});
-        while(!o.empty())
-        {
-            int x=o.top().second;
-            o.pop();
-            c.push(x);
-            path.push_back(mat[x]);
-            if(x==goal)
-            {
-                
-                list<int> path;
-                list<float> cost;
-                while(pred[x])
-                {                    
-                    path.push_front(x);
-                    x=pred[x];
-                }
-                path.push_front(start);
-                return path;
-            }
-            else
-            {
-                for(int i=0; i<3; i++)
-                {
-                    succ.push_back(createSuccessor(mat[x],i));
-                    add_vertex(g);
-                    mat.push_back(succ[succ.size()-1]);
-                    int xsuc=num_vertices(g)-1;
-
-                    //int xsuc=target(*e.first,g);
-                    if(!c.contains(xsuc))
-                    {
-                        if(!o.contains({0,xsuc})||costs[x]>costs[x]+1)
-                        {                    
-                            costs[xsuc]=costs[x]+1;
-                            pred[xsuc]=x;
-                            //o1[costs[xsuc]+heuristic(d.matrix[x],d.matrix[goal])]=x;
-                            if(!o.contains({0,xsuc}))
-                                o.push({costs[xsuc]+heuristic1(succ[succ.size()-1],mat[goal]),xsuc});                            
-                        }
-                    }
-                }
-                for(int i=0; i<3; i++);
-
-                /*for(outEdgePair e=out_edges(x,g); e.first != e.second; ++e.first)
-                {
-                    int xsuc=target(*e.first,g);
-                    if(!c.contains(xsuc))
-                    {
-                        if(!o.contains({0,xsuc})||costs[x]>costs[x]+weight_map[*e.first])
-                        {                    
-                            costs[xsuc]=costs[x]+weight_map[*e.first];
-                            pred[xsuc]=x;
-                            //o1[costs[xsuc]+heuristic(d.matrix[x],d.matrix[goal])]=x;
-                            //if(!o.contains({0,xsuc}))
-                                //o.push({costs[xsuc]+heuristic(d.matrix[xsuc],d.matrix[goal]),xsuc});                            
-                        }
-                    }
-                }*/
-            }
-        }
-    }
-    catch(const std::exception& e)
-    {
-
-    }
-}
-
-float Heuristic(const vec2& p1, const vec2& p2)
+float HybridAStar::Heuristic(const vec3& p1,const vec3& p2)
 {
     float dx=p1.a[0]-p2.a[0];
     float dy=p1.a[1]-p2.a[1];
@@ -237,7 +51,6 @@ float Heuristic(const vec2& p1, const vec2& p2)
     float angle_err = abs(p1.a[2] - p2.a[2]);
     return euclidian_distance+angle_err;
 }
-
 
 vector<State> HybridAStar::Expand(const State &state, const vec3& goal) {
     
@@ -280,39 +93,42 @@ int HybridAStar::Theta2Stack(float theta){
 
 void HybridAStar::Search(const vec3& start, const vec3& goal, const OccurancyMatrix& matrix) 
 {
-  vector<vector<vector<int>>> closed(
-    NUM_THETA_CELLS, vector<vector<int>>(grid_[0].size(), vector<int>(grid_.size())));
-  vector<vector<vector<State>>> came_from(
-    NUM_THETA_CELLS, vector<vector<State>>(grid_[0].size(), vector<State>(grid_.size())));
+  int goal_idx_x=int(floor(goal.a[0]));
+  int goal_idx_y=int(floor(goal.a[1]));
+
+  std::unordered_map<unsigned int, float> costs;
+  std::unordered_map<unsigned int, float> f;
+  std::unordered_map<unsigned int, float> pred;
+  std::unordered_map<unsigned int, State> states;
+
+  MyQueue <pair<float,int>,vector<pair<float,int>>,greater<pair<float,int>>> o;
+  MyQueue <pair<float,int>,vector<pair<float,int>>,greater<pair<float,int>>> c;
+
   int stack = Theta2Stack(start.a[2]);
-  
+
   int g = 0;
   float h = Heuristic(start, goal);
-  float f = g + h;
-  State state(g,h,f, start);
-
-  closed[stack][Idx(state.x)][Idx(state.y)] = 1;
-  came_from[stack][Idx(state.x)][Idx(state.y)] = state;
-  int total_closed = 1;
-  vector<State> opened = {state};
+  float ff = g + h;
+  State state(g,h,ff, start);
+  
+  o.push({ff,0});
+  states[0]=state;
   bool finished = false;
-  while(!opened.empty()) {
-    Sort(&opened); // opened is sorted by f
-    State current = opened[0]; 
-    opened.erase(opened.begin()); // pop current state
-    opend_lists_visualizer_.push_back(opened); // just for visualizer
-    int x = current.x;
-    int y = current.y;
-    double theta = current.theta;
-    if(Idx(x) == goal_idx_[0] && Idx(y) == goal_idx_[1] && (RADIAN2DEG*fabs(theta-goal_pos_[2])<THRESHOLD_GOAL_THETA)) {
-      std::cout << "found path to goal in " << total_closed << " expansions" 
-                << std::endl;
-      Path path;
-      path.came_from = came_from;
-      path.closed = closed;
-      path.final = current;
+  while(!o.empty()) {
+    auto x=o.top();
+    o.pop();
+    c.push(x);
 
-      return path;
+    o.pop(); // pop current state    
+    State current = states[x.second]; 
+
+    //opend_lists_visualizer_.push_back(opened); // just for visualizer
+
+    if(Idx(current.pos.a[0]) == goal_idx_x && Idx(current.pos.a[1]) == goal_idx_y && (RADIAN2DEG*fabs(current.pos.a[2]-goal.a[2])<THRESHOLD_GOAL_THETA)) 
+    {
+      std::cout << "found path to goal in " << " expansions" 
+                << std::endl;
+      //return path;
     }
 
     vector<State> next_state = Expand(current, goal);
@@ -322,21 +138,24 @@ void HybridAStar::Search(const vec3& start, const vec3& goal, const OccurancyMat
         continue;
 
       int stack2 = Theta2Stack(next_state[i].pos.a[2]);
+      // if(!c.contains(xsuc))
+      // {
 
-      if(closed[stack2][Idx(x2)][Idx(y2)] == 0) {
-        opened.push_back(next_state[i]);
-        closed[stack2][Idx(x2)][Idx(y2)] = 1;
-        came_from[stack2][Idx(x2)][Idx(y2)] = current;
-        ++total_closed;
-      }
+      // }
+      // if(closed[stack2][Idx(x2)][Idx(y2)] == 0) {
+      //   opened.push_back(next_state[i]);
+      //   closed[stack2][Idx(x2)][Idx(y2)] = 1;
+      //   came_from[stack2][Idx(x2)][Idx(y2)] = current;
+      //   ++total_closed;
+      // }
     }
   }
 
-  std::cout << "no valid path." << std::endl;
-  Path path;
-  path.came_from = came_from;
-  path.closed = closed;
-  path.final = state;
+  // std::cout << "no valid path." << std::endl;
+  // Path path;
+  // path.came_from = came_from;
+  // path.closed = closed;
+  // path.final = state;
 
-  return path;
+  // return path;
 }
