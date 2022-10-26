@@ -1,4 +1,6 @@
-#include<list>
+#include <list>
+#include "state.h"
+#include "defs.h"
 #include "locationmap.h"
 #include <boost/graph/adjacency_list.hpp>
 using namespace boost;
@@ -26,3 +28,11 @@ typedef typename graph_traits<my_graph>::vertex_descriptor vertex_descriptor;
 typedef typename graph_traits<my_graph>::edge_descriptor  edge_descriptor;
 
 std::list<int> hybrid_atar(my_graph& g, int start, int goal);
+
+class HybridAStar
+{
+    vector<State> Expand(const State &state, const vec3& goal);
+    void Search(const vec3& start, const vec3& goal, const OccurancyMatrix& matrix) 
+    float Heuristic(const vec2& p1, const vec2& p2);
+    int HybridAStar::Theta2Stack(float theta);
+};

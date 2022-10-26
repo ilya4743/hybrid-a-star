@@ -1,0 +1,9 @@
+#define MAX_STEERING 90
+#define DEG2RADIAN M_PI/180.0
+#define RADIAN2DEG 57.2958
+#define DT 1
+#define SPEED 1.5
+#define NUM_THETA_CELLS 180
+#define THRESHOLD_GOAL_THETA 10
+#define VEHICLE_LEGTH 0.5
+#define VEHICLE_WIDTH 0.3

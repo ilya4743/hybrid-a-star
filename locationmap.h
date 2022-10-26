@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <defs.h>
 #include <boost/qvm/vec.hpp>
 
 typedef boost::qvm::vec<float,3> vec3;
@@ -109,5 +110,5 @@ class OccurancyMatrix
     bool is_out_of_map(vec2& p);
     bool is_grid_collision(vec2& p);
 
-}
+};
 #endif // LOCATIONMAP_H

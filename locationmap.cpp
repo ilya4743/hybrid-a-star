@@ -82,25 +82,24 @@ OccurancyMatrix::~OccurancyMatrix()
 {
     matrix.clear();
 }
-#define VEHICLE_LEGTH 0.5
-#define VEHICLE_WIDTH 0.3
+
 bool OccurancyMatrix::is_collision(const vec3& p)
 {
-  double margin = 0.3;
+  float margin = 0.3;
   bool ret = false; 
-  double rear_center_x = p.a[0];
-  double rear_center_y = p.a[1];
-  double front_center_x = rear_center_x + (VEHICLE_LEGTH+margin)*cos(p.a[2]);
-  double front_center_y = rear_center_y + (VEHICLE_LEGTH+margin)*sin(p.a[2]);
-  double left_rear_x = rear_center_x + (VEHICLE_WIDTH+margin)/2*cos(p.a[2] + M_PI/2);
-  double left_rear_y = rear_center_y + (VEHICLE_WIDTH+margin)/2*sin(p.a[2] + M_PI/2);
-  double right_rear_x = rear_center_x + (VEHICLE_WIDTH+margin)/2*cos(M_PI/2 - p.a[2]);
-  double right_rear_y = rear_center_y - (VEHICLE_WIDTH+margin)/2*sin(M_PI/2 - p.a[2]);
+  float rear_center_x = p.a[0];
+  float rear_center_y = p.a[1];
+  float front_center_x = rear_center_x + (VEHICLE_LEGTH+margin)*cos(p.a[2]);
+  float front_center_y = rear_center_y + (VEHICLE_LEGTH+margin)*sin(p.a[2]);
+  float left_rear_x = rear_center_x + (VEHICLE_WIDTH+margin)/2*cos(p.a[2] + M_PI/2);
+  float left_rear_y = rear_center_y + (VEHICLE_WIDTH+margin)/2*sin(p.a[2] + M_PI/2);
+  float right_rear_x = rear_center_x + (VEHICLE_WIDTH+margin)/2*cos(M_PI/2 - p.a[2]);
+  float right_rear_y = rear_center_y - (VEHICLE_WIDTH+margin)/2*sin(M_PI/2 - p.a[2]);
 
-  double left_front_x = front_center_x + (VEHICLE_WIDTH+margin)/2*cos(p.a[2] + M_PI/2);
-  double left_front_y = front_center_y + (VEHICLE_WIDTH+margin)/2*sin(p.a[2] + M_PI/2);
-  double right_front_x = front_center_x + (VEHICLE_WIDTH+margin)/2*cos(M_PI/2 - p.a[2]);
-  double right_front_y = front_center_y - (VEHICLE_WIDTH+margin)/2*sin(M_PI/2 - p.a[2]);
+  float left_front_x = front_center_x + (VEHICLE_WIDTH+margin)/2*cos(p.a[2] + M_PI/2);
+  float left_front_y = front_center_y + (VEHICLE_WIDTH+margin)/2*sin(p.a[2] + M_PI/2);
+  float right_front_x = front_center_x + (VEHICLE_WIDTH+margin)/2*cos(M_PI/2 - p.a[2]);
+  float right_front_y = front_center_y - (VEHICLE_WIDTH+margin)/2*sin(M_PI/2 - p.a[2]);
   vector<vec2> vertices;
   vertices.push_back({left_rear_x, left_rear_y});
   vertices.push_back({right_rear_x, right_rear_y});
@@ -143,7 +142,7 @@ bool OccurancyMatrix::is_out_of_map(vec2& p)
     return false;  
 }
 
-int Idx(double float_num) {
+int Idx(float float_num) {
   // Returns the index into the grid for continuous position. So if x is 3.621, 
   //   then this would return 3 to indicate that 3.621 corresponds to array 
   //   index 3.

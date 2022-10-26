@@ -229,35 +229,114 @@ list<int> hybrid_atar(my_graph& g, int start, int goal)
     }
 }
 
-vector<State> HybridAStar::Expand(State &state) {
-  int g = state.g;
-  double x = state.x;
-  double y = state.y;
-  double theta = state.theta;
+float Heuristic(const vec2& p1, const vec2& p2)
+{
+    float dx=p1.a[0]-p2.a[0];
+    float dy=p1.a[1]-p2.a[1];
+    float euclidian_distance=sqrt(dx*dx+dy*dy);    
+    float angle_err = abs(p1.a[2] - p2.a[2]);
+    return euclidian_distance+angle_err;
+}
+
+
+vector<State> HybridAStar::Expand(const State &state, const vec3& goal) {
     
-  int next_g = g+1;
+  int next_g = state.g+1;
+  float next_h;
+  float next_f;
+  vec3 next_pos;
   vector<State> next_states;
 
-  for(double delta_i = -MAX_STEERING; delta_i <= MAX_STEERING; delta_i+=5) {
+  for(float delta_i = -MAX_STEERING; delta_i <= MAX_STEERING; delta_i+=5) {
     // kinematic model
-    double delta = DEG2RADIAN * delta_i;
-    double omega = SPEED / VEHICLE_LEGTH * (delta) * DT;
-    double next_theta = theta + omega;
-    if(next_theta < 0) {
-      next_theta += 2*M_PI;
+    float delta = DEG2RADIAN * delta_i;
+    float omega = SPEED / VEHICLE_LEGTH * (delta) * DT;
+    next_pos.a[2] = state.pos.a[2] + omega;
+    if(next_pos.a[2] < 0) {
+      next_pos.a[2] += 2*M_PI;
     }
-    double next_x = x + SPEED * cos(theta)* DT;
-    double next_y = y + SPEED * sin(theta)* DT;
-    State next_state;
-    next_state.g = next_g;
-    next_state.x = next_x;
-    next_state.y = next_y;
+    next_pos.a[0] = state.pos.a[0] + SPEED * cos(state.pos.a[2])* DT;
+    next_pos.a[1] = state.pos.a[1] + SPEED * sin(state.pos.a[2])* DT;
 
-    next_state.theta = next_theta;
-    next_state.h = Heuristic(next_x, next_y, next_state.theta, goal_pos_[0], goal_pos_[1], goal_pos_[2]);
-    next_state.f = next_state.g + next_state.h;
+    next_h = Heuristic(next_pos, goal);
+    next_f = next_g + next_h;
+    State next_state(next_g, next_h, next_f, next_pos);
     next_states.push_back(next_state);
   }
 
   return next_states;
+}
+
+int HybridAStar::Theta2Stack(float theta){
+  // Takes an angle (in radians) and returns which "stack" in the 3D 
+  //   configuration space this angle corresponds to. Angles near 0 go in the 
+  //   lower stacks while angles near 2 * pi go in the higher stacks.
+  float new_theta = fmod((theta + 2 * M_PI),(2 * M_PI));
+  int stack_number = (int)(round(new_theta * NUM_THETA_CELLS / (2*M_PI))) 
+                   % NUM_THETA_CELLS;
+
+  return stack_number;
+}
+
+void HybridAStar::Search(const vec3& start, const vec3& goal, const OccurancyMatrix& matrix) 
+{
+  vector<vector<vector<int>>> closed(
+    NUM_THETA_CELLS, vector<vector<int>>(grid_[0].size(), vector<int>(grid_.size())));
+  vector<vector<vector<State>>> came_from(
+    NUM_THETA_CELLS, vector<vector<State>>(grid_[0].size(), vector<State>(grid_.size())));
+  int stack = Theta2Stack(start.a[2]);
+  
+  int g = 0;
+  float h = Heuristic(start, goal);
+  float f = g + h;
+  State state(g,h,f, start);
+
+  closed[stack][Idx(state.x)][Idx(state.y)] = 1;
+  came_from[stack][Idx(state.x)][Idx(state.y)] = state;
+  int total_closed = 1;
+  vector<State> opened = {state};
+  bool finished = false;
+  while(!opened.empty()) {
+    Sort(&opened); // opened is sorted by f
+    State current = opened[0]; 
+    opened.erase(opened.begin()); // pop current state
+    opend_lists_visualizer_.push_back(opened); // just for visualizer
+    int x = current.x;
+    int y = current.y;
+    double theta = current.theta;
+    if(Idx(x) == goal_idx_[0] && Idx(y) == goal_idx_[1] && (RADIAN2DEG*fabs(theta-goal_pos_[2])<THRESHOLD_GOAL_THETA)) {
+      std::cout << "found path to goal in " << total_closed << " expansions" 
+                << std::endl;
+      Path path;
+      path.came_from = came_from;
+      path.closed = closed;
+      path.final = current;
+
+      return path;
+    }
+
+    vector<State> next_state = Expand(current, goal);
+
+    for(int i = 0; i < next_state.size(); ++i) {
+      if (is_collision(next_state[i].pos))
+        continue;
+
+      int stack2 = Theta2Stack(next_state[i].pos.a[2]);
+
+      if(closed[stack2][Idx(x2)][Idx(y2)] == 0) {
+        opened.push_back(next_state[i]);
+        closed[stack2][Idx(x2)][Idx(y2)] = 1;
+        came_from[stack2][Idx(x2)][Idx(y2)] = current;
+        ++total_closed;
+      }
+    }
+  }
+
+  std::cout << "no valid path." << std::endl;
+  Path path;
+  path.came_from = came_from;
+  path.closed = closed;
+  path.final = state;
+
+  return path;
 }

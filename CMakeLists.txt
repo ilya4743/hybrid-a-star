@@ -16,7 +16,9 @@ add_executable(${PROJECT_NAME}
     hybrid_astar.cpp
     locationmap.h
     helper.h
+    state.h
     locationmap.cpp
     main.cpp
     node.cpp
+    state.cpp
 )
