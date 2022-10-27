@@ -39,7 +39,7 @@ class HybridAStar
     float Heuristic(const vec3& p1, const vec3& p2);
     int Theta2Stack(float theta);
     vector<State> Expand(const State &state, const vec3& goal);
-    bool is_collision(const vec3& p,  const OccurancyMatrix& mat);
+    bool is_collision(const vec3& p, OccurancyMatrix& mat);
     int Idx(double float_num) {
     // Returns the index into the grid for continuous position. So if x is 3.621, 
     //   then this would return 3 to indicate that 3.621 corresponds to array 
@@ -47,5 +47,5 @@ class HybridAStar
     return int(floor(float_num));
     }
     public:
-    void Search(const vec3& start, const vec3& goal, const OccurancyMatrix& matrix);
+    void Search(const vec3& start, const vec3& goal, OccurancyMatrix& matrix);
 };

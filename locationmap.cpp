@@ -83,7 +83,7 @@ OccurancyMatrix::~OccurancyMatrix()
     matrix.clear();
 }
 
-bool OccurancyMatrix::is_out_of_map(vec2& p)
+bool OccurancyMatrix::is_out_of_map(const vec2& p)
 {
   if((p.a[0] < 0 || p.a[0] >= (width-1)*step) || 
      (p.a[1] < 0 || p.a[1] >= (height-1)*step))
@@ -92,7 +92,14 @@ bool OccurancyMatrix::is_out_of_map(vec2& p)
     return false;  
 }
 
-bool OccurancyMatrix::is_grid_collision(vec2& p)
+int OccurancyMatrix::Idx(double float_num) {
+  // Returns the index into the grid for continuous position. So if x is 3.621, 
+  //   then this would return 3 to indicate that 3.621 corresponds to array 
+  //   index 3.
+  return int(floor(float_num));
+}
+
+bool OccurancyMatrix::is_grid_collision(const vec2& p)
 {
   if (matrix[Idx(p.a[0])*width + Idx(p.a[1])] == 1)
     return true;

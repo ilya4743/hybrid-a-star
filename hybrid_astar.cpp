@@ -2,7 +2,7 @@
 
 using namespace std;
 
-bool HybridAStar::is_collision(const vec3& p, const OccurancyMatrix& mat)
+bool HybridAStar::is_collision(const vec3& p, OccurancyMatrix& mat)
 {
   float margin = 0.3;
   bool ret = false; 
@@ -91,7 +91,7 @@ int HybridAStar::Theta2Stack(float theta){
   return stack_number;
 }
 
-void HybridAStar::Search(const vec3& start, const vec3& goal, const OccurancyMatrix& matrix) 
+void HybridAStar::Search(const vec3& start, const vec3& goal, OccurancyMatrix& matrix) 
 {
   int goal_idx_x=int(floor(goal.a[0]));
   int goal_idx_y=int(floor(goal.a[1]));
@@ -134,7 +134,7 @@ void HybridAStar::Search(const vec3& start, const vec3& goal, const OccurancyMat
     vector<State> next_state = Expand(current, goal);
 
     for(int i = 0; i < next_state.size(); ++i) {
-      if (is_collision(next_state[i].pos))
+      if (is_collision(next_state[i].pos,matrix))
         continue;
 
       int stack2 = Theta2Stack(next_state[i].pos.a[2]);

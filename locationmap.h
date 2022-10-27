@@ -105,7 +105,8 @@ class OccurancyMatrix
     OccurancyMatrix(int width, int height, float step, const vector<int>& matrix);
     OccurancyMatrix(const OccurancyMatrix& matrix);
     ~OccurancyMatrix();
-    bool is_out_of_map(vec2& p);
-    bool is_grid_collision(vec2& p);
+    bool is_out_of_map(const vec2& p);
+    bool is_grid_collision(const vec2& p);
+    int Idx(double float_num);
 };
 #endif // LOCATIONMAP_H
