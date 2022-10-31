@@ -2,7 +2,6 @@
 #include "helper.h"
 #include <cmath>
 
-typedef boost::qvm::vec<float,3> vec3;
 
 using namespace boost;
 

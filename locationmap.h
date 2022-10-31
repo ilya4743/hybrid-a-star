@@ -107,6 +107,6 @@ class OccurancyMatrix
     ~OccurancyMatrix();
     bool is_out_of_map(const vec2& p);
     bool is_grid_collision(const vec2& p);
-    int Idx(double float_num);
+    int Idx(float float_num);
 };
 #endif // LOCATIONMAP_H

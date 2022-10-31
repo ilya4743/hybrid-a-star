@@ -92,7 +92,7 @@ bool OccurancyMatrix::is_out_of_map(const vec2& p)
     return false;  
 }
 
-int OccurancyMatrix::Idx(double float_num) {
+int OccurancyMatrix::Idx(float float_num) {
   // Returns the index into the grid for continuous position. So if x is 3.621, 
   //   then this would return 3 to indicate that 3.621 corresponds to array 
   //   index 3.

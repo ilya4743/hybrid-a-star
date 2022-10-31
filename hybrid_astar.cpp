@@ -91,18 +91,34 @@ int HybridAStar::Theta2Stack(float theta){
   return stack_number;
 }
 
+bool Compare(State v1, State v2)
+{
+    if (v1.f < v2.f)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+    
+}
+void Sort(vector<State> *v) {
+  sort(v->begin(), v->end(), Compare);
+}
+
 void HybridAStar::Search(const vec3& start, const vec3& goal, OccurancyMatrix& matrix) 
 {
   int goal_idx_x=int(floor(goal.a[0]));
   int goal_idx_y=int(floor(goal.a[1]));
 
-  std::unordered_map<unsigned int, float> costs;
-  std::unordered_map<unsigned int, float> f;
-  std::unordered_map<unsigned int, float> pred;
-  std::unordered_map<unsigned int, State> states;
-
-  MyQueue <pair<float,int>,vector<pair<float,int>>,greater<pair<float,int>>> o;
-  MyQueue <pair<float,int>,vector<pair<float,int>>,greater<pair<float,int>>> c;
+  vector<vector<vector<int>>> closed(
+    NUM_THETA_CELLS, 
+    vector<vector<int>>(matrix.width, vector<int>(matrix.height))
+  );
+  vector<State> o;
+  vector<vector<vector<State>>> came_from(
+    NUM_THETA_CELLS, vector<vector<State>>(matrix.width, vector<State>(matrix.height)));
 
   int stack = Theta2Stack(start.a[2]);
 
@@ -111,18 +127,12 @@ void HybridAStar::Search(const vec3& start, const vec3& goal, OccurancyMatrix& m
   float ff = g + h;
   State state(g,h,ff, start);
   
-  o.push({ff,0});
-  states[0]=state;
-  bool finished = false;
+  o.push_back(state);
+
   while(!o.empty()) {
-    auto x=o.top();
-    o.pop();
-    c.push(x);
-
-    o.pop(); // pop current state    
-    State current = states[x.second]; 
-
-    //opend_lists_visualizer_.push_back(opened); // just for visualizer
+    Sort(&o);
+    State current=*o.begin();
+    o.erase(o.begin());
 
     if(Idx(current.pos.a[0]) == goal_idx_x && Idx(current.pos.a[1]) == goal_idx_y && (RADIAN2DEG*fabs(current.pos.a[2]-goal.a[2])<THRESHOLD_GOAL_THETA)) 
     {
@@ -133,21 +143,19 @@ void HybridAStar::Search(const vec3& start, const vec3& goal, OccurancyMatrix& m
 
     vector<State> next_state = Expand(current, goal);
 
-    for(int i = 0; i < next_state.size(); ++i) {
+    for(int i = 0; i < next_state.size(); ++i) 
+    {
       if (is_collision(next_state[i].pos,matrix))
         continue;
 
       int stack2 = Theta2Stack(next_state[i].pos.a[2]);
-      // if(!c.contains(xsuc))
-      // {
-
-      // }
-      // if(closed[stack2][Idx(x2)][Idx(y2)] == 0) {
-      //   opened.push_back(next_state[i]);
-      //   closed[stack2][Idx(x2)][Idx(y2)] = 1;
-      //   came_from[stack2][Idx(x2)][Idx(y2)] = current;
-      //   ++total_closed;
-      // }
+      if(closed[stack2][Idx(next_state[i].pos.a[0])][Idx(next_state[i].pos.a[1])] == 0) 
+      {
+        o.push_back(next_state[i]);
+        closed[stack2][Idx(next_state[i].pos.a[0])][Idx(next_state[i].pos.a[1])] = 1;
+        came_from[stack2][Idx(next_state[i].pos.a[0])][Idx(next_state[i].pos.a[1])] = current;
+        //++total_closed;
+      }
     }
   }
 

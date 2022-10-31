@@ -24,14 +24,14 @@ vector<int> grid = {
   0,0,1,0,0,0,0,0,0,0,0,1,1,1,1,1,
   0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
   1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  };
+};
 
 int main()
 {
-    //HybridAStar astar;
+    HybridAStar astar;
     vec3 start({0.5,0.5,0.0f});
     vec3 end({15.5,15.5,M_PI_2});
     OccurancyMatrix mat(15,15,1,grid);
-    //astar.Search(start, end, mat);
+    astar.Search(start, end, mat);
     return 0;
 }
