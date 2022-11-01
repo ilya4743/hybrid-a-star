@@ -1,5 +1,14 @@
 #include "hybrid_astar.h"
 
+struct CompareNodes {
+  /// Sorting 3D nodes by increasing C value - the total estimated cost
+  bool operator()(const State* lhs, const State* rhs) const {
+    return lhs->c > rhs->c;
+  }
+};
+
+typedef boost::heap::binomial_heap<State*,boost::heap::compare<CompareNodes>> priorityQueue;
+
 using namespace std;
 
 bool HybridAStar::is_collision(const vec3& p, OccurancyMatrix& mat)
@@ -52,118 +61,124 @@ float HybridAStar::Heuristic(const vec3& p1,const vec3& p2)
     return euclidian_distance+angle_err;
 }
 
-vector<State> HybridAStar::Expand(const State &state, const vec3& goal) {
+// vector<State> HybridAStar::Expand(const State &state, const vec3& goal) {
     
-  int next_g = state.g+1;
-  float next_h;
-  float next_f;
-  vec3 next_pos;
-  vector<State> next_states;
+//   int next_g = state.g+1;
+//   float next_h;
+//   float next_f;
+//   vec3 next_pos;
+//   vector<State> next_states;
 
-  for(float delta_i = -MAX_STEERING; delta_i <= MAX_STEERING; delta_i+=5) {
-    // kinematic model
-    float delta = DEG2RADIAN * delta_i;
-    float omega = SPEED / VEHICLE_LEGTH * (delta) * DT;
-    next_pos.a[2] = state.pos.a[2] + omega;
-    if(next_pos.a[2] < 0) {
-      next_pos.a[2] += 2*M_PI;
-    }
-    next_pos.a[0] = state.pos.a[0] + SPEED * cos(state.pos.a[2])* DT;
-    next_pos.a[1] = state.pos.a[1] + SPEED * sin(state.pos.a[2])* DT;
+//   for(float delta_i = -MAX_STEERING; delta_i <= MAX_STEERING; delta_i+=5) {
+//     // kinematic model
+//     float delta = DEG2RADIAN * delta_i;
+//     float omega = SPEED / VEHICLE_LEGTH * (delta) * DT;
+//     next_pos.a[2] = state.pos.a[2] + omega;
+//     if(next_pos.a[2] < 0) {
+//       next_pos.a[2] += 2*M_PI;
+//     }
+//     next_pos.a[0] = state.pos.a[0] + SPEED * cos(state.pos.a[2])* DT;
+//     next_pos.a[1] = state.pos.a[1] + SPEED * sin(state.pos.a[2])* DT;
 
-    next_h = Heuristic(next_pos, goal);
-    next_f = next_g + next_h;
-    State next_state(next_g, next_h, next_f, next_pos);
-    next_states.push_back(next_state);
-  }
+//     next_h = Heuristic(next_pos, goal);
+//     next_f = next_g + next_h;
+//     State next_state(next_g, next_h, next_f, next_pos);
+//     next_states.push_back(next_state);
+//   }
 
-  return next_states;
-}
+//   return next_states;
+// }
 
-int HybridAStar::Theta2Stack(float theta){
-  // Takes an angle (in radians) and returns which "stack" in the 3D 
-  //   configuration space this angle corresponds to. Angles near 0 go in the 
-  //   lower stacks while angles near 2 * pi go in the higher stacks.
-  float new_theta = fmod((theta + 2 * M_PI),(2 * M_PI));
-  int stack_number = (int)(round(new_theta * NUM_THETA_CELLS / (2*M_PI))) 
-                   % NUM_THETA_CELLS;
-
-  return stack_number;
-}
-
-bool Compare(State v1, State v2)
-{
-    if (v1.f < v2.f)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-    
-}
-void Sort(vector<State> *v) {
-  sort(v->begin(), v->end(), Compare);
-}
-
-void HybridAStar::Search(const vec3& start, const vec3& goal, OccurancyMatrix& matrix) 
-{
-  int goal_idx_x=int(floor(goal.a[0]));
-  int goal_idx_y=int(floor(goal.a[1]));
-
-  vector<vector<vector<int>>> closed(
-    NUM_THETA_CELLS, 
-    vector<vector<int>>(matrix.width, vector<int>(matrix.height))
-  );
-  vector<State> o;
-  vector<vector<vector<State>>> came_from(
-    NUM_THETA_CELLS, vector<vector<State>>(matrix.width, vector<State>(matrix.height)));
-
-  int stack = Theta2Stack(start.a[2]);
-
-  int g = 0;
-  float h = Heuristic(start, goal);
-  float ff = g + h;
-  State state(g,h,ff, start);
+State* HybridAStar::Search(State& start, const State& goal, State* nodes3D, OccurancyMatrix& matrix)
+{  
+  int iPred, iSucc;
+  float newG;
+  int iterations=0;
+  int dir=6;
+  priorityQueue O;
   
-  o.push_back(state);
+  start.open();
+  O.push(&start);
 
-  while(!o.empty()) {
-    Sort(&o);
-    State current=*o.begin();
-    o.erase(o.begin());
+  iPred=start.setIdx(matrix.width, matrix.height);
+  nodes3D[iPred]=start;
 
-    if(Idx(current.pos.a[0]) == goal_idx_x && Idx(current.pos.a[1]) == goal_idx_y && (RADIAN2DEG*fabs(current.pos.a[2]-goal.a[2])<THRESHOLD_GOAL_THETA)) 
+  State* nPred;
+  State* nSucc;
+
+  while(!O.empty()) {
+    
+    nPred=O.top();
+    iPred=nPred->setIdx(matrix.width, matrix.height);
+    iterations++;
+
+    if (nodes3D[iPred].isClosed()) {
+      O.pop();
+      continue;
+    }    
+    else if (nodes3D[iPred].isOpen()) 
     {
-      std::cout << "found path to goal in " << " expansions" 
-                << std::endl;
-      //return path;
-    }
-
-    vector<State> next_state = Expand(current, goal);
-
-    for(int i = 0; i < next_state.size(); ++i) 
-    {
-      if (is_collision(next_state[i].pos,matrix))
-        continue;
-
-      int stack2 = Theta2Stack(next_state[i].pos.a[2]);
-      if(closed[stack2][Idx(next_state[i].pos.a[0])][Idx(next_state[i].pos.a[1])] == 0) 
+      // add node to closed list
+      nodes3D[iPred].close();
+      // remove node from open list
+      O.pop();
+    
+      if(*nPred==goal||iterations>30000)
       {
-        o.push_back(next_state[i]);
-        closed[stack2][Idx(next_state[i].pos.a[0])][Idx(next_state[i].pos.a[1])] = 1;
-        came_from[stack2][Idx(next_state[i].pos.a[0])][Idx(next_state[i].pos.a[1])] = current;
-        //++total_closed;
+        std::cout << "found path to goal in " << " expansions" 
+                  << std::endl;
+        return nPred;
+      }
+        // ______________________________
+        // SEARCH WITH FORWARD SIMULATION
+      for (int i = 0; i < dir; i++) {
+        // create possible successor
+        nSucc = nPred->createSuccessor(i);
+        // set index of the successor
+        iSucc = nSucc->setIdx(matrix.width, matrix.height);
+        // ensure successor is on grid and traversable
+        bool test=!is_collision(nSucc->pos,matrix);
+        bool test1=nSucc->isOnGrid(matrix.width, matrix.height);
+        if (nSucc->isOnGrid(matrix.width, matrix.height)&&(!is_collision(nSucc->pos,matrix))) {
+
+          // ensure successor is not on closed list or it has the same index as the predecessor
+          if (!nodes3D[iSucc].isClosed() || iPred == iSucc) {
+
+            // calculate new G value
+            nSucc->updateG();
+            newG = nSucc->g;
+
+            // if successor not on open list or found a shorter way to the cell
+            if (!nodes3D[iSucc].isOpen() || newG < nodes3D[iSucc].g || iPred == iSucc) {
+
+              // calculate H value
+              //updateH(*nSucc, goal, nodes2D, dubinsLookup, width, height, configurationSpace);
+
+              // if the successor is in the same cell but the C value is larger
+              if (iPred == iSucc && nSucc->getC() > nPred->getC() + Constants::tieBreaker) {
+                delete nSucc;
+                continue;
+              }
+                // if successor is in the same cell and the C value is lower, set predecessor to predecessor of predecessor
+              else if (iPred == iSucc && nSucc->getC() <= nPred->getC() + Constants::tieBreaker) {
+                nSucc->pred=nPred->pred;
+              }
+
+              if (nSucc->pred == nSucc) {
+                std::cout << "looping";
+              }
+
+              // put successor on open list
+              nSucc->open();
+              nodes3D[iSucc] = *nSucc;
+              O.push(&nodes3D[iSucc]);
+              delete nSucc;
+            } else { delete nSucc; }
+          } else { delete nSucc; }
+        } else { delete nSucc; }
       }
     }
   }
-
-  // std::cout << "no valid path." << std::endl;
-  // Path path;
-  // path.came_from = came_from;
-  // path.closed = closed;
-  // path.final = state;
-
-  // return path;
+  
+  return nullptr;
 }
