@@ -87,3 +87,13 @@ bool State::operator == (const State& rhs) const {
          (std::abs(pos.a[2] - rhs.pos.a[2]) <= Constants::deltaHeadingRad ||
           std::abs(pos.a[2] - rhs.pos.a[2]) >= Constants::deltaHeadingNegRad);
 }
+
+//###################################################
+//                                        IS IN RANGE
+//###################################################
+bool State::isInRange(const State& goal) const {
+  int random = rand() % 10 + 1;
+  float dx = std::abs(pos.a[0] - goal.pos.a[0]) / random;
+  float dy = std::abs(pos.a[1] - goal.pos.a[1]) / random;
+  return (dx * dx) + (dy * dy) < Constants::dubinsShotDistance;
+}

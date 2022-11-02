@@ -1,3 +1,5 @@
+#pragma once
+
 #include <boost/qvm/vec.hpp>
 #include <cmath>
 #include "helper.h"
@@ -47,4 +49,11 @@ class State
   /// Custom operator to compare nodes. Nodes are equal if their x and y position as well as heading is similar.
   bool operator == (const State& rhs) const;
   bool isOnGrid(const int width, const int height) const;
+  bool isInRange(const State& goal) const;
 };
+
+inline void getConfiguration(const State* node, float& x, float& y, float& t) {
+  x = node->pos.a[0];
+  y = node->pos.a[1];
+  t = node->pos.a[2];
+}

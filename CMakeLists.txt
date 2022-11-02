@@ -11,7 +11,9 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_executable(${PROJECT_NAME}
+add_executable(${PROJECT_NAME}    
+    collisiondetection.cpp
+    collisiondetection.h
     hybrid_astar.h
     locationmap.h
     helper.h
@@ -20,6 +22,10 @@ add_executable(${PROJECT_NAME}
     main.cpp
     state.cpp
     hybrid_astar.cpp
+
+    dubins.h
+    dubins.cpp
+    lookup.h
 )
 find_package(ompl REQUIRED)
 include_directories(include ${OMPL_INCLUDE_DIRS})

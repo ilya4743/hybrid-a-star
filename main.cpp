@@ -49,33 +49,39 @@ vector<int> grid2 = {
 
 int main()
 {
+  vector<int8_t> ggrid;
+  ggrid.resize(10000);
   HybridAStar astar;
-  OccurancyMatrix mat(15,15,1,grid2);
 
-  int width = mat.width;
-  int height = mat.height;
-  int depth = 72;
+
+  int width = 100;
+  int height = 100;
+  int depth = Constants::headings;
   int length = width * height * depth;
   State* nodes3D = new State[length]();
 
-  float x=0.5;
-  float y=0.5;
+  float x=20;
+  float y=20;
   float theta=Helper::normalizeHeadingRad(0.0f);
   State start(x,y,theta,0,0,nullptr);
 
-  x=15.5;
-  y=15.5;
-  theta=Helper::normalizeHeadingRad(M_PI_2);
+  x=30;
+  y=20;
+  theta=Helper::normalizeHeadingRad(0);
   State goal(x,y,theta,0,0,nullptr);
 
-  astar.Search(start, goal, nodes3D, mat);
+  //astar.Search(start, goal, nodes3D, mat);
   
 
 
-  nav_msgs::OccupancyGrid grid;
-  grid.info.width=15;
-  grid.info.height=15;
-  grid.data=grid1;
-  grid.
+nav_msgs::OccupancyGridPtr ptr(new nav_msgs::OccupancyGrid);
+  ptr->info.width=100;
+  ptr->info.height=100;
+  ptr->data=ggrid;
+
+  CollisionDetection cd;
+  cd.grid=ptr;
+  astar.Search(start, goal, nodes3D, ptr->info.width, ptr->info.height, cd);
+  //grid.
   return 0;
 }
