@@ -12,7 +12,7 @@ class State
   public:
   State();
   State(const vec3& pos, float g, float h);
-  State(float x, float y, float theta, float g, float h, const State* pred, int prim = 0);
+  State(float x, float y, float theta, float g, float h, State* pred, int prim = 0);
 
   State(const State& state);
   ~State();
@@ -32,7 +32,7 @@ class State
   /// the motion primitive of the node
   int prim;
   /// the predecessor pointer
-  const State* pred;
+   State* pred;
 
   void updateG();
     /// get the total estimated cost
@@ -50,6 +50,51 @@ class State
   bool operator == (const State& rhs) const;
   bool isOnGrid(const int width, const int height) const;
   bool isInRange(const State& goal) const;
+
+  // GETTER METHODS
+  /// get the x position
+  float getX() const { return pos.a[0]; }
+  /// get the y position
+  float getY() const { return pos.a[1]; }
+  /// get the heading theta
+  float getT() const { return pos.a[2]; }
+  /// get the cost-so-far (real value)
+  float getG() const { return g; }
+  /// get the cost-to-come (heuristic value)
+  float getH() const { return h; }
+  /// get the total estimated cost
+  float getC() const { return g + h; }
+  /// get the index of the node in the 3D array
+  int getIdx() const { return idx; }
+  /// get the number associated with the motion primitive of the node
+  int getPrim() const { return prim; }
+  /// determine whether the node is open
+  bool isOpen() const { return o; }
+  /// determine whether the node is closed
+  bool isClosed() const { return c; }
+  /// determine whether the node is open
+  const Node3D* getPred() const { return pred; }
+
+  // SETTER METHODS
+  /// set the x position
+  void setX(const float& x) { this->pos.a[0] = x; }
+  /// set the y position
+  void setY(const float& y) { this->pos.a[1] = y; }
+  /// set the heading theta
+  void setT(const float& t) { this->pos.a[2] = t; }
+  /// set the cost-so-far (real value)
+  void setG(const float& g) { this->g = g; }
+  /// set the cost-to-come (heuristic value)
+  void setH(const float& h) { this->h = h; }
+  /// set and get the index of the node in the 3D grid
+  // int setIdx(int width, int height) { this->idx = (int)(t / Constants::deltaHeadingRad) * width * height + (int)(y) * width + (int)(x); return idx;}
+  // /// open the node
+  // void open() { o = true; c = false;}
+  // /// close the node
+  // void close() { c = true; o = false; }
+  /// set a pointer to the predecessor of the node
+  void setPred(const State* pred) { this->pred = pred; }
+
 };
 
 inline void getConfiguration(const State* node, float& x, float& y, float& t) {

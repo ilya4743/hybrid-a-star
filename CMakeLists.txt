@@ -22,7 +22,8 @@ add_executable(${PROJECT_NAME}
     main.cpp
     state.cpp
     hybrid_astar.cpp
-
+    node2d.h
+    node2d.cpp
     dubins.h
     dubins.cpp
     lookup.h

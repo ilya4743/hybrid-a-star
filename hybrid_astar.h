@@ -2,8 +2,13 @@
 #include "defs.h"
 #include "locationmap.h"
 #include "collisiondetection.h"
-
+#include "node2d.h"
 #include <boost/heap/binomial_heap.hpp>
+#include <ompl/base/spaces/ReedsSheppStateSpace.h>
+#include <ompl/base/spaces/DubinsStateSpace.h>
+#include <ompl/base/spaces/SE2StateSpace.h>
+
+typedef ompl::base::SE2StateSpace::StateType state;
 
 class HybridAStar
 {

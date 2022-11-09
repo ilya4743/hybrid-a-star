@@ -11,7 +11,9 @@
 #define VEHICLE_WIDTH 0.3
 
 namespace Constants {
-
+  static const bool reverse = true;
+static const bool dubins = false;
+static const bool twoD = true;
 static const float tieBreaker = 0.01;
 /// [#] --- A movement cost penalty for turning (choosing non straight motion primitives)
 static const float penaltyTurning = 1.05;

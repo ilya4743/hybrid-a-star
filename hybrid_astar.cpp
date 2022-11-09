@@ -147,6 +147,124 @@ State* dubinsShot(State& start, const State& goal, CollisionDetection& configura
 }
 
 
+void updateH(State& start, const State& goal, float* dubinsLookup, int width, int height, CollisionDetection& configurationSpace) 
+{
+  float dubinsCost = 0;
+  float reedsSheppCost = 0;
+  float twoDCost = 0;
+  float twoDoffset = 0;
+
+  // if dubins heuristic is activated calculate the shortest path
+  // constrained without obstacles
+  // if (Constants::dubins) {
+
+  //   // ONLY FOR dubinsLookup
+  //   //    int uX = std::abs((int)goal.getX() - (int)start.getX());
+  //   //    int uY = std::abs((int)goal.getY() - (int)start.getY());
+  //   //    // if the lookup table flag is set and the vehicle is in the lookup area
+  //   //    if (Constants::dubinsLookup && uX < Constants::dubinsWidth - 1 && uY < Constants::dubinsWidth - 1) {
+  //   //      int X = (int)goal.getX() - (int)start.getX();
+  //   //      int Y = (int)goal.getY() - (int)start.getY();
+  //   //      int h0;
+  //   //      int h1;
+
+  //   //      // mirror on x axis
+  //   //      if (X >= 0 && Y <= 0) {
+  //   //        h0 = (int)(helper::normalizeHeadingRad(M_PI_2 - t) / Constants::deltaHeadingRad);
+  //   //        h1 = (int)(helper::normalizeHeadingRad(M_PI_2 - goal.getT()) / Constants::deltaHeadingRad);
+  //   //      }
+  //   //      // mirror on y axis
+  //   //      else if (X <= 0 && Y >= 0) {
+  //   //        h0 = (int)(helper::normalizeHeadingRad(M_PI_2 - t) / Constants::deltaHeadingRad);
+  //   //        h1 = (int)(helper::normalizeHeadingRad(M_PI_2 - goal.getT()) / Constants::deltaHeadingRad);
+
+  //   //      }
+  //   //      // mirror on xy axis
+  //   //      else if (X <= 0 && Y <= 0) {
+  //   //        h0 = (int)(helper::normalizeHeadingRad(M_PI - t) / Constants::deltaHeadingRad);
+  //   //        h1 = (int)(helper::normalizeHeadingRad(M_PI - goal.getT()) / Constants::deltaHeadingRad);
+
+  //   //      } else {
+  //   //        h0 = (int)(t / Constants::deltaHeadingRad);
+  //   //        h1 = (int)(goal.getT() / Constants::deltaHeadingRad);
+  //   //      }
+
+  //   //      dubinsCost = dubinsLookup[uX * Constants::dubinsWidth * Constants::headings * Constants::headings
+  //   //                                + uY *  Constants::headings * Constants::headings
+  //   //                                + h0 * Constants::headings
+  //   //                                + h1];
+  //   //    } else {
+
+  //   /*if (Constants::dubinsShot && std::abs(start.getX() - goal.getX()) >= 10 && std::abs(start.getY() - goal.getY()) >= 10)*/
+  //   //      // start
+  //   //      double q0[] = { start.getX(), start.getY(), start.getT()};
+  //   //      // goal
+  //   //      double q1[] = { goal.getX(), goal.getY(), goal.getT()};
+  //   //      DubinsPath dubinsPath;
+  //   //      dubins_init(q0, q1, Constants::r, &dubinsPath);
+  //   //      dubinsCost = dubins_path_length(&dubinsPath);
+
+  //   ompl::base::DubinsStateSpace dubinsPath(Constants::r);
+  //   State* dbStart = (State*)dubinsPath.allocState();
+  //   State* dbEnd = (State*)dubinsPath.allocState();
+  //   dbStart->setXY(start.getX(), start.getY());
+  //   dbStart->setYaw(start.getT());
+  //   dbEnd->setXY(goal.getX(), goal.getY());
+  //   dbEnd->setYaw(goal.getT());
+  //   dubinsCost = dubinsPath.distance(dbStart, dbEnd);
+  // }
+
+  // if reversing is active use a
+  if (Constants::reverse && !Constants::dubins) {
+    //    ros::Time t0 = ros::Time::now();
+    ompl::base::ReedsSheppStateSpace reedsSheppPath(Constants::r);
+    state* rsStart = (state*)reedsSheppPath.allocState();
+    state* rsEnd = (state*)reedsSheppPath.allocState();
+    rsStart->setXY(start.getX(), start.getY());
+    rsStart->setYaw(start.getT());
+    rsEnd->setXY(goal.getX(), goal.getY());
+    rsEnd->setYaw(goal.getT());
+    reedsSheppCost = reedsSheppPath.distance(rsStart, rsEnd);
+    //    ros::Time t1 = ros::Time::now();
+    //    ros::Duration d(t1 - t0);
+    //    std::cout << "calculated Reed-Sheep Heuristic in ms: " << d * 1000 << std::endl;
+  }
+
+  // if twoD heuristic is activated determine shortest path
+  // unconstrained with obstacles
+  if (Constants::twoD && !nodes2D[(int)start.getY() * width + (int)start.getX()].isDiscovered()) {
+    //    ros::Time t0 = ros::Time::now();
+    // create a 2d start node
+    Node2D start2d(start.getX(), start.getY(), 0, 0, nullptr);
+    // create a 2d goal node
+    Node2D goal2d(goal.getX(), goal.getY(), 0, 0, nullptr);
+    // run 2d astar and return the cost of the cheapest path for that node
+    nodes2D[(int)start.getY() * width + (int)start.getX()].setG(aStar(goal2d, start2d, nodes2D, width, height, configurationSpace));
+    //    ros::Time t1 = ros::Time::now();
+    //    ros::Duration d(t1 - t0);
+    //    std::cout << "calculated 2D Heuristic in ms: " << d * 1000 << std::endl;
+  }
+
+  if (Constants::twoD) {
+    // offset for same node in cell
+    twoDoffset = sqrt(((start.getX() - (long)start.getX()) - (goal.getX() - (long)goal.getX())) * ((start.getX() - (long)start.getX()) - (goal.getX() - (long)goal.getX())) +
+                      ((start.getY() - (long)start.getY()) - (goal.getY() - (long)goal.getY())) * ((start.getY() - (long)start.getY()) - (goal.getY() - (long)goal.getY())));
+    twoDCost = nodes2D[(int)start.getY() * width + (int)start.getX()].getG() - twoDoffset;
+
+  }
+
+  // return the maximum of the heuristics, making the heuristic admissable
+  start.h=(std::max(reedsSheppCost, std::max(dubinsCost, twoDCost)));
+}
+
+float heuristic(const vec3& a, const vec3& b)
+{
+    float dx=a.a[0]-b.a[0];
+    float dy=a.a[1]-b.a[1];
+    float h=sqrt(dx*dx+dy*dy);
+    return h;
+}
+
 State* HybridAStar::Search(State& start, const State& goal, State* nodes3D, int width, int height, CollisionDetection& configurationSpace)
 {
   int iPred, iSucc;
@@ -154,7 +272,7 @@ State* HybridAStar::Search(State& start, const State& goal, State* nodes3D, int 
   int iterations=0;
   int dir=6;
   priorityQueue O;
-  
+  start.h=heuristic(start.pos, goal.pos);
   start.open();
   O.push(&start);
 
@@ -267,7 +385,7 @@ State* HybridAStar::Search(State& start, const State& goal, State* nodes3D, int 
             if (!nodes3D[iSucc].isOpen() || newG < nodes3D[iSucc].g || iPred == iSucc) {
 
               // calculate H value
-              //updateH(*nSucc, goal, nodes2D, dubinsLookup, width, height, configurationSpace);
+              nSucc->h=heuristic(nSucc->pos, goal.pos);
 
               // if the successor is in the same cell but the C value is larger
               if (iPred == iSucc && nSucc->getC() > nPred->getC() + Constants::tieBreaker) {

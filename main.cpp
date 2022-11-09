@@ -47,6 +47,8 @@ vector<int> grid2 = {
 #include <nav_msgs/OccupancyGrid.h>
 
 
+
+
 int main()
 {
   vector<int8_t> ggrid;
@@ -65,9 +67,9 @@ int main()
   float theta=Helper::normalizeHeadingRad(0.0f);
   State start(x,y,theta,0,0,nullptr);
 
-  x=30;
-  y=20;
-  theta=Helper::normalizeHeadingRad(0);
+  x=20;
+  y=30;
+  theta=Helper::normalizeHeadingRad(0.0f);
   State goal(x,y,theta,0,0,nullptr);
 
   //astar.Search(start, goal, nodes3D, mat);
@@ -80,8 +82,14 @@ nav_msgs::OccupancyGridPtr ptr(new nav_msgs::OccupancyGrid);
   ptr->data=ggrid;
 
   CollisionDetection cd;
+  ptr->info.resolution=1;
   cd.grid=ptr;
-  astar.Search(start, goal, nodes3D, ptr->info.width, ptr->info.height, cd);
-  //grid.
+  State* path=astar.Search(start, goal, nodes3D, ptr->info.width, ptr->info.height, cd);
+  vector<State> path_vec;
+  while(path->pred!=NULL)
+  {
+    path_vec.push_back(*path);
+    path=path->pred;
+  }
   return 0;
 }

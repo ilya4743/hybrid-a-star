@@ -8,7 +8,7 @@ State::State(const vec3& pos, float g, float h): pos(pos), g(g), h(h)
 {
 }
 
-State::State(float x, float y, float theta, float g, float h, const State* pred, int prim):pos({x,y,theta}),g(g), h(h),pred(pred),o(0),c(0),idx(-1),prim(prim)
+State::State(float x, float y, float theta, float g, float h, State* pred, int prim):pos({x,y,theta}),g(g), h(h),pred(pred),o(0),c(0),idx(-1),prim(prim)
 {
 }
 
