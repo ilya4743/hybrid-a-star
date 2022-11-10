@@ -2,8 +2,9 @@
 #define COLLISIONLOOKUP
 
 #include "dubins.h"
-#include "defs.h"
+#include "constants.h"
 
+namespace HybridAStar {
 namespace Lookup {
 
 //###################################################
@@ -329,6 +330,7 @@ inline void collisionLookup(Constants::config* lookup) {
   std::cout << " done!" << std::endl;
 }
 
+}
 }
 #endif // LOOKUP
 

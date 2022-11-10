@@ -1,5 +1,7 @@
 #include "node2d.h"
 
+using namespace HybridAStar;
+
 // possible directions
 const int Node2D::dir = 8;
 // possible movements

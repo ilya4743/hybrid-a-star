@@ -18,6 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifndef DUBINS_CPP
+#define DUBINS_CPP
 
 #include "dubins.h"
 #define _USE_MATH_DEFINES // for C++
@@ -37,6 +39,8 @@
 #define L_SEG (0)
 #define S_SEG (1)
 #define R_SEG (2)
+
+namespace HybridAStar{
 
 // The segment types for each of the Path types
 const int DIRDATA[][3] = {
@@ -349,3 +353,5 @@ int dubins_extract_subpath( DubinsPath* path, double t, DubinsPath* newpath )
     newpath->param[2] = fmin( path->param[2], tprime - newpath->param[0] - newpath->param[1]);
     return 0;
 }
+}
+#endif

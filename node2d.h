@@ -1,5 +1,16 @@
-#pragma once
+#ifndef NODE2D_H
+#define NODE2D_H
+
 #include <cmath>
+
+#include "constants.h"
+namespace HybridAStar {
+
+/*!
+   \brief A two dimensional node class used for the holonomic with obstacles heuristic.
+
+   Each node has a unique discrete position (x,y).
+*/
 class Node2D {
  public:
   /// The default constructor for 2D array initialization.
@@ -108,3 +119,5 @@ class Node2D {
   /// the predecessor pointer
   Node2D* pred;
 };
+}
+#endif // NODE2D_H

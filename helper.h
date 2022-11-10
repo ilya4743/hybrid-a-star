@@ -1,7 +1,20 @@
-#pragma once
+/*!
+   \file
+   \brief This is a collection of helper functions that are used throughout the project.
 
-#include<cmath>
+*/
+#ifndef HELPER
+#define HELPER
 
+#include <cmath>
+#include <algorithm>
+
+#include "constants.h"
+namespace HybridAStar {
+/*!
+    \brief The namespace that wraps helper.h
+    \namespace Helper
+*/
 namespace Helper {
 
 /*!
@@ -65,3 +78,7 @@ static inline float clamp(float n, float lower, float upper) {
 }
 
 }
+}
+
+#endif // HELPER
+

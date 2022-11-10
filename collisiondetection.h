@@ -2,10 +2,27 @@
 #define COLLISIONDETECTION_H
 
 #include <nav_msgs/OccupancyGrid.h>
-#include "defs.h"
-#include "lookup.h"
-#include "state.h"
 
+#include "constants.h"
+#include "lookup.h"
+#include "node2d.h"
+#include "node3d.h"
+
+namespace HybridAStar {
+namespace {
+inline void getConfiguration(const Node2D* node, float& x, float& y, float& t) {
+  x = node->getX();
+  y = node->getY();
+  // avoid 2D collision checking
+  t = 99;
+}
+
+inline void getConfiguration(const Node3D* node, float& x, float& y, float& t) {
+  x = node->getX();
+  y = node->getY();
+  t = node->getT();
+}
+}
 /*!
    \brief The CollisionDetection class determines whether a given configuration q of the robot will result in a collision with the environment.
 
@@ -35,7 +52,7 @@ class CollisionDetection {
 
     // 2D collision test
     if (t == 99) {
-      return !grid->data[node->idx];
+      return !grid->data[node->getIdx()];
     }
 
     if (true) {
@@ -71,11 +88,11 @@ class CollisionDetection {
   */
   void updateGrid(nav_msgs::OccupancyGrid::Ptr map) {grid = map;}
 
- public:
+ private:
   /// The occupancy grid
   nav_msgs::OccupancyGrid::Ptr grid;
   /// The collision lookup table
   Constants::config collisionLookup[Constants::headings * Constants::positions];
 };
-
+}
 #endif // COLLISIONDETECTION_H

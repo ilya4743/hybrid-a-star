@@ -1,95 +1,22 @@
-#include <iostream>
-#include "locationmap.h"
-#include "hybrid_astar.h"
-#include "helper.h"
-#include <boost/qvm/vec.hpp>
+#define BOOST_TEST_MODULE boost_test_macro2
+#include <boost/test/included/unit_test.hpp>
 
-typedef boost::qvm::vec<float,3> vec3;
-
-using namespace std;
-
-vector<int8_t> grid1 = {
-  0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,
-  0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,
-  0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,
-  0,0,1,0,0,0,0,1,0,0,0,0,1,1,1,0,
-  0,0,1,0,0,0,1,0,0,0,0,1,1,1,0,0,
-  0,0,1,0,0,1,0,0,0,0,1,1,1,0,0,0,
-  0,0,1,0,1,0,0,0,0,0,1,1,0,0,0,0,
-  0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,
-  0,0,0,0,0,1,0,0,0,0,0,1,1,1,1,1,
-  0,0,0,0,1,0,1,0,0,0,1,1,1,1,1,1,
-  0,0,0,1,0,0,0,0,0,0,1,1,1,1,1,1,
-  0,0,1,0,0,0,0,0,0,0,0,1,1,1,1,1,
-  0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-};
-vector<int> grid2 = {
-  0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,
-  0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,
-  0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,
-  0,0,1,0,0,0,0,1,0,0,0,0,1,1,1,0,
-  0,0,1,0,0,0,1,0,0,0,0,1,1,1,0,0,
-  0,0,1,0,0,1,0,0,0,0,1,1,1,0,0,0,
-  0,0,1,0,1,0,0,0,0,0,1,1,0,0,0,0,
-  0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,
-  0,0,0,0,0,1,0,0,0,0,0,1,1,1,1,1,
-  0,0,0,0,1,0,1,0,0,0,1,1,1,1,1,1,
-  0,0,0,1,0,0,0,0,0,0,1,1,1,1,1,1,
-  0,0,1,0,0,0,0,0,0,0,0,1,1,1,1,1,
-  0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-};
-#include <nav_msgs/OccupancyGrid.h>
-
-
-
-
-int main()
+BOOST_AUTO_TEST_CASE( test_op_precedence )
 {
-  vector<int8_t> ggrid;
-  ggrid.resize(10000);
-  HybridAStar astar;
+  int a = 13, b = 2, c = 12;
+  // left term of == is expanded in the logs
+  BOOST_TEST(a % b == c);
+  // right term of == is not expanded in the logs
+  BOOST_TEST(a == c % b);
+}
 
-
-  int width = 100;
-  int height = 100;
-  int depth = Constants::headings;
-  int length = width * height * depth;
-  State* nodes3D = new State[length]();
-
-  float x=20;
-  float y=20;
-  float theta=Helper::normalizeHeadingRad(0.0f);
-  State start(x,y,theta,0,0,nullptr);
-
-  x=20;
-  y=30;
-  theta=Helper::normalizeHeadingRad(0.0f);
-  State goal(x,y,theta,0,0,nullptr);
-
-  //astar.Search(start, goal, nodes3D, mat);
-  
-
-
-nav_msgs::OccupancyGridPtr ptr(new nav_msgs::OccupancyGrid);
-  ptr->info.width=100;
-  ptr->info.height=100;
-  ptr->data=ggrid;
-
-  CollisionDetection cd;
-  ptr->info.resolution=1;
-  cd.grid=ptr;
-  State* path=astar.Search(start, goal, nodes3D, ptr->info.width, ptr->info.height, cd);
-  vector<State> path_vec;
-  while(path->pred!=NULL)
+BOOST_AUTO_TEST_CASE( TEST_ECB )
+{
+  int a = 1;
+  for(int i=0; i<10; i++)
   {
-    path_vec.push_back(*path);
-    path=path->pred;
+    BOOST_CHECK_EQUAL(a,0);
   }
-  return 0;
+  BOOST_TEST(!a);
+  BOOST_TEST(--a);
 }

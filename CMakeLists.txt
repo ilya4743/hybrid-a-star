@@ -14,19 +14,25 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_executable(${PROJECT_NAME}    
     collisiondetection.cpp
     collisiondetection.h
-    hybrid_astar.h
-    locationmap.h
+    algorithm.h
     helper.h
-    state.h
-    locationmap.cpp
+    node3d.h
     main.cpp
-    state.cpp
-    hybrid_astar.cpp
+    node3d.cpp
+    algorithm.cpp
     node2d.h
     node2d.cpp
     dubins.h
     dubins.cpp
     lookup.h
+    dynamicvoronoi.h
+    dynamicvoronoi.cpp
+    smoother.h
+    smoother.cpp    
+    bucketedqueue.h
+    bucketedqueue.cpp
+    hybridastar.h
+    hybridastar.cpp
 )
 find_package(ompl REQUIRED)
 include_directories(include ${OMPL_INCLUDE_DIRS})
