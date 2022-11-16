@@ -1,6 +1,6 @@
 #include "hybridastar.h"
 
-void HybridAstar::searchHybridAStar(float x1, float y1, float t1, float x2, float y2, float t2, int w, int h)
+void HybridAstarAlgo::searchHybridAStar(float x1, float y1, float t1, float x2, float y2, float t2, int w, int h)
 {
     ggrid.resize(w*h);
     grid->info.width=w;
@@ -31,27 +31,10 @@ void HybridAstar::searchHybridAStar(float x1, float y1, float t1, float x2, floa
     cd.updateGrid(grid);
 
     Node3D* nSolution=Algorithm::hybridAStar(nStart, nGoal, nodes3D, nodes2D, grid->info.width, grid->info.height, cd,dubinsLookup);
-    delete dubinsLookup;
 
-    bool** binMap;
-    binMap = new bool*[grid->info.width];
-
-    for (int x = 0; x < grid->info.width; x++) 
-    { 
-        binMap[x] = new bool[grid->info.height]; 
-    }
-
-    for (int x = 0; x < grid->info.width; ++x) 
-    {
-        for (int y = 0; y < grid->info.height; ++y) 
-        {
-            binMap[x][y] = grid->data[y * grid->info.width + x] ? true : false;
-        }
-    }
-
-    voronoiDiagram.initializeMap(grid->info.width, grid->info.height, binMap);
-    voronoiDiagram.update();
-    voronoiDiagram.visualize();
+    voronoiDiagram->initializeMap(grid->info.width, grid->info.height, grid->data);
+    voronoiDiagram->update();
+    voronoiDiagram->visualize();
 
       // TRACE THE PATH
     smoother.tracePath(nSolution);

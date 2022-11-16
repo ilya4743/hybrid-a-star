@@ -59,8 +59,23 @@ void DynamicVoronoi::initializeEmpty(int _sizeX, int _sizeY, bool initGridMap) {
   }
 }
 
-void DynamicVoronoi::initializeMap(int _sizeX, int _sizeY, bool** _gridMap) {
-  gridMap = _gridMap;
+void DynamicVoronoi::initializeMap(int _sizeX, int _sizeY, std::vector<int8_t> indata) {
+
+  this->gridMap = new bool*[_sizeX];
+
+  for (int x = 0; x < _sizeX; x++) 
+  { 
+    this->gridMap[x] = new bool[_sizeY]; 
+  }
+
+  for (int x = 0; x < _sizeX; ++x) 
+  {
+    for (int y = 0; y < _sizeY; ++y) 
+    {
+      this->gridMap[x][y] = indata[y * _sizeX + x] ? true : false;
+    }
+  }
+
   initializeEmpty(_sizeX, _sizeY, false);
 
   for (int x=0; x<sizeX; x++) {

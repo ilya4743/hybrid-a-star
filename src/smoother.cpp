@@ -15,11 +15,11 @@ inline bool isCusp(const std::vector<Node3D>& path, int i) {
 //###################################################
 //                                SMOOTHING ALGORITHM
 //###################################################
-void Smoother::smoothPath(DynamicVoronoi& voronoi) {
+void Smoother::smoothPath(DynamicVoronoi* voronoi) {
   // load the current voronoi diagram into the smoother
   this->voronoi = voronoi;
-  this->width = voronoi.getSizeX();
-  this->height = voronoi.getSizeY();
+  this->width = voronoi->getSizeX();
+  this->height = voronoi->getSizeY();
   // current number of iterations of the gradient descent smoother
   int iterations = 0;
   // the maximum iterations for the gd smoother
@@ -81,15 +81,12 @@ void Smoother::smoothPath(DynamicVoronoi& voronoi) {
   path = newPath;
 }
 
-void Smoother::tracePath(const Node3D* node, int i, std::vector<Node3D> path) {
-  if (node == nullptr) {
-    this->path = path;
-    return;
+void Smoother::tracePath(const Node3D* node) {
+  while(node!=nullptr)
+  {
+    this->path.push_back(*node);
+    node=const_cast<Node3D*>(node->getPred());
   }
-
-  i++;
-  path.push_back(*node);
-  tracePath(node->getPred(), i, path);
 }
 
 //###################################################
@@ -98,14 +95,14 @@ void Smoother::tracePath(const Node3D* node, int i, std::vector<Node3D> path) {
 Vector2D Smoother::obstacleTerm(Vector2D xi) {
   Vector2D gradient;
   // the distance to the closest obstacle from the current node
-  float obsDst = voronoi.getDistance(xi.getX(), xi.getY());
+  float obsDst = voronoi->getDistance(xi.getX(), xi.getY());
   // the vector determining where the obstacle is
   int x = (int)xi.getX();
   int y = (int)xi.getY();
   // if the node is within the map
   if (x < width && x >= 0 && y < height && y >= 0) {
-    Vector2D obsVct(xi.getX() - voronoi.data[(int)xi.getX()][(int)xi.getY()].obstX,
-                    xi.getY() - voronoi.data[(int)xi.getX()][(int)xi.getY()].obstY);
+    Vector2D obsVct(xi.getX() - voronoi->data[(int)xi.getX()][(int)xi.getY()].obstX,
+                    xi.getY() - voronoi->data[(int)xi.getX()][(int)xi.getY()].obstY);
 
     // the closest obstacle is closer than desired correct the path for that
     if (obsDst < obsDMax) {

@@ -14,14 +14,15 @@ namespace HybridAStar {
 class DynamicVoronoi {
 
  public:
-
+  DynamicVoronoi(const DynamicVoronoi&) = delete;
+  DynamicVoronoi& operator=(const DynamicVoronoi&) = delete;
   DynamicVoronoi();
   ~DynamicVoronoi();
 
   //! Initialization with an empty map
   void initializeEmpty(int _sizeX, int _sizeY, bool initGridMap = true);
   //! Initialization with a given binary map (false==free, true==occupied)
-  void initializeMap(int _sizeX, int _sizeY, bool** _gridMap);
+  void initializeMap(int _sizeX, int _sizeY, std::vector<int8_t> data);
 
   //! add an obstacle at the specified cell coordinate
   void occupyCell(int x, int y);
