@@ -1,13 +1,12 @@
 #include "hybridastar.h"
 
-void HybridAstarAlgo::searchHybridAStar(float x1, float y1, float t1, float x2, float y2, float t2, int w, int h)
+std::vector<Ogre::Vector3> HybridAstarAlgo::searchHybridAStar(float x1, float y1, float t1, float x2, float y2, float t2, int w, int h)
 {
     ggrid.resize(w*h);
     grid->info.width=w;
     grid->info.height=h;
     grid->data=ggrid;
     grid->info.resolution=1;
-
     int width = grid->info.width;
     int height = grid->info.height;
     int depth = Constants::headings;
@@ -32,14 +31,23 @@ void HybridAstarAlgo::searchHybridAStar(float x1, float y1, float t1, float x2, 
 
     Node3D* nSolution=Algorithm::hybridAStar(nStart, nGoal, nodes3D, nodes2D, grid->info.width, grid->info.height, cd,dubinsLookup);
 
-    voronoiDiagram->initializeMap(grid->info.width, grid->info.height, grid->data);
-    voronoiDiagram->update();
-    voronoiDiagram->visualize();
+    //voronoiDiagram->initializeMap(grid->info.width, grid->info.height, grid->data);
+    //voronoiDiagram->update();
+    //voronoiDiagram->visualize();
 
       // TRACE THE PATH
     smoother.tracePath(nSolution);
-    smoother.smoothPath(voronoiDiagram);
+    //smoother.smoothPath(voronoiDiagram);
     //delete voronoiDiagram;
     delete [] nodes3D;
     delete [] nodes2D;
+    std::vector<Ogre::Vector3> out;
+    auto p=smoother.getPath();
+    out.reserve(p.size());
+    for(int i=0; i<smoother.getPath().size(); i++)
+    {
+      Ogre::Vector3 ve(p[i].getX(),p[i].getT(), p[i].getY());
+      out.push_back(ve);
+    }
+    return out;
 }
