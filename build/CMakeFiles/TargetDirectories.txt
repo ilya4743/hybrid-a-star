@@ -1,3 +1,0 @@
-/home/ilya/Музыка/hybrid-a-star/build/CMakeFiles/test.dir
-/home/ilya/Музыка/hybrid-a-star/build/CMakeFiles/edit_cache.dir
-/home/ilya/Музыка/hybrid-a-star/build/CMakeFiles/rebuild_cache.dir
