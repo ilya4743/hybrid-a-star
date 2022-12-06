@@ -1,12 +1,11 @@
 #include "hybridastar.h"
 
-std::vector<Ogre::Vector3> HybridAstarAlgo::searchHybridAStar(float x1, float y1, float t1, float x2, float y2, float t2, int w, int h)
+std::vector<Ogre::Vector3> HybridAstarAlgo::searchHybridAStar(float x1, float y1, float t1, float x2, float y2, float t2, int w, int h, const OccurancyGrid& occurancy)
 {
-    ggrid.resize(w*h);
-    grid->info.width=w;
-    grid->info.height=h;
-    grid->data=ggrid;
-    grid->info.resolution=1;
+    grid->info.width=occurancy.width;
+    grid->info.height=occurancy.height;
+    grid->data=occurancy.data;
+    grid->info.resolution=occurancy.resolution;
     int width = grid->info.width;
     int height = grid->info.height;
     int depth = Constants::headings;
@@ -46,7 +45,7 @@ std::vector<Ogre::Vector3> HybridAstarAlgo::searchHybridAStar(float x1, float y1
     out.reserve(p.size());
     for(int i=0; i<smoother.getPath().size(); i++)
     {
-      Ogre::Vector3 ve(p[i].getX(),p[i].getT(), p[i].getY());
+      Ogre::Vector3 ve(p[i].getX()*Constants::cellSize,p[i].getT(), p[i].getY()*Constants::cellSize);
       out.push_back(ve);
     }
     return out;
