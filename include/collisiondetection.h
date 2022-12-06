@@ -1,8 +1,8 @@
 #ifndef COLLISIONDETECTION_H
 #define COLLISIONDETECTION_H
 
-#include <nav_msgs/OccupancyGrid.h>
-
+//#include <nav_msgs/OccupancyGrid.h>
+#include "occupancygrid.h"
 #include "constants.h"
 #include "lookup.h"
 #include "node2d.h"
@@ -52,7 +52,7 @@ class CollisionDetection {
 
     // 2D collision test
     if (t == 99) {
-      return !grid->data[node->getIdx()];
+      return !grid.data[node->getIdx()];
     }
 
     if (true) {
@@ -86,11 +86,11 @@ class CollisionDetection {
   /*!
      \brief updates the grid with the world map
   */
-  void updateGrid(nav_msgs::OccupancyGrid::Ptr map) {grid = map;}
+  void updateGrid(OccupancyGrid map) {grid = map;}
 
  private:
   /// The occupancy grid
-  nav_msgs::OccupancyGrid::Ptr grid;
+  OccupancyGrid grid;
   /// The collision lookup table
   Constants::config collisionLookup[Constants::headings * Constants::positions];
 };

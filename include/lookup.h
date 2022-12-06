@@ -3,6 +3,7 @@
 
 #include "dubins.h"
 #include "constants.h"
+#include <iostream>
 
 namespace HybridAStar {
 namespace Lookup {
