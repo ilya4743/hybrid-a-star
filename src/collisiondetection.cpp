@@ -3,7 +3,6 @@
 using namespace HybridAStar;
 
 CollisionDetection::CollisionDetection() {
-  this->grid = nullptr;
   Lookup::collisionLookup(collisionLookup);
 }
 
@@ -24,8 +23,8 @@ bool CollisionDetection::configurationTest(float x, float y, float t) const {
     cY = (Y + collisionLookup[idx].pos[i].y);
 
     // make sure the configuration coordinates are actually on the grid
-    if (cX >= 0 && (unsigned int)cX < grid->info.width && cY >= 0 && (unsigned int)cY < grid->info.height) {
-      if (grid->data[cY * grid->info.width + cX]) {
+    if (cX >= 0 && (unsigned int)cX < grid.width && cY >= 0 && (unsigned int)cY < grid.height) {
+      if (grid.data[cY * grid.width + cX]) {
         return false;
       }
     }
