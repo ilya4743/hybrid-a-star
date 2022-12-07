@@ -2,7 +2,6 @@
 #include "algorithm.h"
 #include "helper.h"
 #include <smoother.h>
-#include "path.h"
 #include <vector>
 #include "dynamicvoronoi.h"
 #include <OgreVector3.h>
@@ -20,7 +19,6 @@ class HybridAstarAlgo
         vector<int8_t> ggrid;
         float* dubinsLookup;
         Smoother smoother;
-        Path path;
     public:
     HybridAstarAlgo()
     {
