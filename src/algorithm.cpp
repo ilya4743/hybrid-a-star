@@ -403,6 +403,8 @@ void updateH(Node3D& start, const Node3D& goal, Node2D* nodes2D, float* dubinsLo
     rsEnd->setXY(goal.getX(), goal.getY());
     rsEnd->setYaw(goal.getT());
     reedsSheppCost = reedsSheppPath.distance(rsStart, rsEnd);
+    reedsSheppPath.freeState(rsStart);
+    reedsSheppPath.freeState(rsEnd);
     //    ros::Time t1 = ros::Time::now();
     //    ros::Duration d(t1 - t0);
     //    std::cout << "calculated Reed-Sheep Heuristic in ms: " << d * 1000 << std::endl;
