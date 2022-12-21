@@ -4,7 +4,7 @@
 #include <smoother.h>
 #include <vector>
 #include "dynamicvoronoi.h"
-#include <OgreVector3.h>
+#include <OGRE/OgreVector3.h>
 #include "occupancygrid.h"
 
 using namespace std;

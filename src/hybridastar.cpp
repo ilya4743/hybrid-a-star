@@ -21,8 +21,8 @@ std::vector<Ogre::Vector3> HybridAstarAlgo::searchHybridAStar(float x1, float y1
     t1 = Helper::normalizeHeadingRad(t1);
     Node3D nStart(x1, y1, t1, 0, 0, nullptr);
 
-    x2 = x2 / Constants::cellSize;
-    y2 = y2 / Constants::cellSize;
+    x2 = x2 / occurancy.resolution;
+    y2 = y2 / occurancy.resolution;
     t2 = Helper::normalizeHeadingRad(t2);
     const Node3D nGoal(x2, y2, t2, 0, 0, nullptr);
 

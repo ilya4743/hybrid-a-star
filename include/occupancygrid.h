@@ -1,9 +1,8 @@
 #ifndef OCCUPANCYGRID_H
 #define OCCUPANCYGRID_H
 #include "stddef.h"
-#include "barrier.h"
 #include <vector>
-
+#include <OGRE/OgreVector3.h>
 #include <boost/geometry/geometries/box.hpp> 
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
@@ -44,7 +43,7 @@ class OccupancyGrid
         int getJ(Ogre::Vector3 p){return p.z/resolution;};
 };
 
-class Placer
+/*class Placer
 {
     private:
     inline void bresenham(int x1, int y1, int x2, int y2, OccupancyGrid& grid)
@@ -121,5 +120,5 @@ class Placer
             }
         }
     };
-};
+};*/
 #endif // OCCUPANCYGRID_H
